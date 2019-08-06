@@ -1,0 +1,411 @@
+---
+title: "SARA: Availability and Missing Data Statistics"
+author: "Jamie Yap"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+geometry: margin=1in
+output:
+  pdf_document: 
+    fig_caption: yes
+    number_sections: TRUE
+---
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(tidy = TRUE)
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+set.seed(54239212)
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+
+# Read in file paths and source scripts
+path.code <- Sys.getenv("path.code")  # Location of all code
+path.readme <- Sys.getenv("path.readme")  # Location of files for creating this document
+path.dataforanalysis <- Sys.getenv("path.dataforanalysis")  # Location of files to be used for data analysis
+path.background <- Sys.getenv("path.background") 
+path.aim1.availability <- Sys.getenv("path.aim1.availability")  # Location of files indicating availability for Aim 1 for a given participant-day
+path.aim2.availability <- Sys.getenv("path.aim2.availability")  # Location of files indicating availability for Aim 2 for a given participant-day
+path.aim4.availability <- Sys.getenv("path.aim4.availability")  # Location of files indicating availability for Aim 4 for a given participant-day
+path.aim1.missing.intervention <- Sys.getenv("path.aim1.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 1 for a given participant-day
+path.aim2.missing.intervention <- Sys.getenv("path.aim2.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 2 for a given participant-day
+path.aim4.missing.intervention <- Sys.getenv("path.aim4.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 4 for a given participant-day
+path.mapdata <- Sys.getenv("path.mapdata") # Location of file mapping days and dates for study participants
+path.exclude.all <- Sys.getenv("path.exclude.all")  # Location of files indicating which participant-days to exclude from all aims
+this.participant.withdrew <- Sys.getenv("this.participant.withdrew")
+
+source(file.path(path.code, "io-utils.R"))
+source(file.path(path.code, "data-manip-utils.R"))
+source(file.path(path.code, "file-check-utils.R"))
+source(file.path(path.code, "main-utils.R"))
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+# Read in data for analysis
+dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+# Read in other info relevant to all aims
+participant.days.to.exclude <- ReadAll(path.to.files = path.exclude.all)
+map.wide <- ReadAll(path.to.files = path.mapdata)
+
+# Read in other relevant info for Aim 1
+map.long.aim1 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+
+# Exclude study days in Aim 2
+dataforanalysis.aim2 <- dataforanalysis.aim2[!(dataforanalysis.aim2$study_day==29),]  #Exclude very last day
+dataforanalysis.aim2 <- dataforanalysis.aim2[!(dataforanalysis.aim2$username==this.participant.withdrew & dataforanalysis.aim2$study_day==11),]  #Exclude very last day for this.participant.withdrew
+map.long.aim2 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+map.long.aim2 <- map.long.aim2[!(map.long.aim2$study_day==29),] # Exclude very last day
+map.long.aim2 <- map.long.aim2[!(map.long.aim2$username==this.participant.withdrew & map.long.aim2$study_day==11),] # Exclude last day for this.participant.withdrew
+map.long.aim2 <- merge(map.long.aim2, dataforanalysis.aim2[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+map.long.aim2 <- map.long.aim2[map.long.aim2$memegifbug==0,] # Only include participants who were not affected by bug
+map.long.aim2 <- map.long.aim2[, colnames(map.long.aim2) %in% c("username", "study_day", "calendar_date")]
+dataforanalysis.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$memegifbug == 0,]  # Only include participants who were not affected by bug
+
+# Exclude study days in Aim 4
+dataforanalysis.aim4 <- dataforanalysis.aim4[!(dataforanalysis.aim4$study_day==29),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[!(dataforanalysis.aim4$username==this.participant.withdrew & dataforanalysis.aim4$study_day==11),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[(dataforanalysis.aim4$study_day>=3),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[dataforanalysis.aim4$memegifbug==0,]
+map.long.aim4 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+map.long.aim4 <- map.long.aim4[!(map.long.aim4$study_day==29),] # Exclude very last day
+map.long.aim4 <- map.long.aim4[!(map.long.aim4$username==this.participant.withdrew & map.long.aim4$study_day==11),] # Exclude last day for this.participant.withdrew
+map.long.aim4 <- map.long.aim4[(map.long.aim4$study_day>=3),] # Exclude day 1 and 2
+map.long.aim4 <- merge(map.long.aim4, dataforanalysis.aim4[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+map.long.aim4 <- map.long.aim4[map.long.aim4$memegifbug==0,] # Only include participants who were not affected by bug
+map.long.aim4 <- map.long.aim4[, colnames(map.long.aim4) %in% c("username", "study_day", "calendar_date")]
+```
+
+
+```{r, echo = FALSE}
+dat.plot.index.aim1 <- data.frame(username = unique(dataforanalysis.aim1$username), plotindex = 1:length(unique(dataforanalysis.aim1$username)))
+dat.plot.index.aim2 <- data.frame(username = unique(dataforanalysis.aim2$username), plotindex = 1:length(unique(dataforanalysis.aim2$username)))
+dat.plot.index.aim4 <- data.frame(username = unique(dataforanalysis.aim4$username), plotindex = 1:length(unique(dataforanalysis.aim4$username)))
+
+dataforanalysis.aim1 <- merge(dataforanalysis.aim1, dat.plot.index.aim1, by = "username", all.x = TRUE, all.y = TRUE)
+dataforanalysis.aim2 <- merge(dataforanalysis.aim2, dat.plot.index.aim2, by = "username", all.x = TRUE, all.y = TRUE)
+dataforanalysis.aim4 <- merge(dataforanalysis.aim4, dat.plot.index.aim4, by = "username", all.x = TRUE, all.y = TRUE)
+```
+
+
+```{r, echo = FALSE}
+# Perform imputation on missing intervention assignment
+imputed.dataforanalysis.aim1 <- ImputeInterventionAssignment(dataforanalysis.aim1)
+imputed.dataforanalysis.aim2 <- ImputeInterventionAssignment(dataforanalysis.aim2)
+imputed.dataforanalysis.aim4 <- ImputeInterventionAssignment(dataforanalysis.aim4)
+```
+
+This document provides summary statistics on availability and missing data from the SARA micro-randomized trial and is divided into three sections. \newline
+**Section 1:** summary statistics on availability for each aim. \newline
+**Section 2:** summary statistics on missing intervention assignment for each aim.\newline
+**Section 3:** summary statistics on control covariates for each aim.
+
+The *csv* files under the column ``File Name'' in the tables below each contain a list of participants and dates that were impacted by various issues/events leading to unavailability or missing intervention assignment. A brief description of these issues/events is given below:
+
+
+```{r, echo = FALSE}
+sara_background <- read.csv(file.path(path.background, "sara_background.csv"), header = TRUE)
+
+kable(sara_background, format = "latex",
+      caption = "Summary of known issues affecting the outcome, intervention assignment, or control variables by aim",
+      align = c('c', 'c', 'c','c', 'c', 'l'),
+      col.names = c("Issue No.", "File Name", "Aim 1 Impacted?", "Aim 2 Impacted?", "Aim 4 Impacted?", "Issue/Event"),
+      row.names = FALSE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position", "scale_down"))%>%
+  column_spec(6, width = "25em")
+```
+
+
+# Availability
+
+```{r, echo = FALSE}
+# Tabulate overall available person days by aim
+tab.availability.overall <- data.frame(label = c("No. participant days available", "No. participant days not available", "Total participant days in data for analysis"), 
+                               aim1 = c(sum(dataforanalysis.aim1$availability), sum(dataforanalysis.aim1$availability==0), nrow(dataforanalysis.aim1)), 
+                               aim2 = c(sum(dataforanalysis.aim2$availability), sum(dataforanalysis.aim2$availability==0), nrow(dataforanalysis.aim2)),
+                               aim4 = c(sum(dataforanalysis.aim4$availability), sum(dataforanalysis.aim4$availability==0), nrow(dataforanalysis.aim4)))
+
+kable(tab.availability.overall, format = "latex",caption = "Total participant days not available",
+      align = c('c', 'c', 'c','c'),
+      col.names = c("","Aim 1","Aim 2","Aim 4"),
+      row.names = FALSE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) %>%
+  row_spec(2, hline_after = TRUE)
+```
+
+
+```{r, echo = FALSE}
+aim1.availability <- SummariseAll(path.aim1.availability, map.long.aim1)
+aim2.availability <- SummariseAll(path.aim2.availability, map.long.aim2)
+aim4.availability <- SummariseAll(path.aim4.availability, map.long.aim4)
+
+aim1.availability.commondays <- GetCommonPersonDays(path.aim1.availability, map.long.aim1)
+aim2.availability.commondays  <- GetCommonPersonDays(path.aim2.availability, map.long.aim2)
+aim4.availability.commondays  <- GetCommonPersonDays(path.aim4.availability, map.long.aim4)
+
+aim2.availability <- aim2.availability[-2,] # Remove row corresponding to issue_01
+aim2.availability.commondays <- aim2.availability.commondays[, !(colnames(aim2.availability.commondays) %in% c("issue_01.csv.in.df"))]
+aim2.availability.commondays$in.more.dfs <- aim2.availability.commondays$issue_00.csv.in.df + aim2.availability.commondays$noncompletion_aim2.csv.in.df
+
+aim4.availability <- aim4.availability[-2,] # Remove row corresponding to issue_01
+aim4.availability.commondays <- aim4.availability.commondays[, !(colnames(aim4.availability.commondays) %in% c("issue_01.csv.in.df"))]
+aim4.availability.commondays$in.more.dfs <- aim4.availability.commondays$issue_00.csv.in.df + aim4.availability.commondays$noncompletion_aim4.csv.in.df
+
+
+aim1.availability.number.days.in.common <- sum(aim1.availability.commondays$in.more.dfs>1)
+aim2.availability.number.days.in.common <- sum(aim2.availability.commondays$in.more.dfs>1)
+aim4.availability.number.days.in.common <- sum(aim4.availability.commondays$in.more.dfs>1)
+```
+
+```{r, echo = FALSE}
+PrintKableTable(output.SummariseAll = aim1.availability, 
+                mycaption = "Aim 1: Total participants and days not available for 4PM notification per issue/event within days 1-29",
+                mygenfootnote = paste(aim1.availability.number.days.in.common, 
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim1.availability$npersondays)), "-",
+                                      aim1.availability.number.days.in.common, "=",
+                                      sum(dataforanalysis.aim1$availability==0)
+                                      ))
+
+PrintKableTable(output.SummariseAll = aim2.availability,
+                mycaption = "Aim 2: Total participants and days not available for meme/GIF per issue/event within days 1-28",
+                mygenfootnote = paste(aim2.availability.number.days.in.common,
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim2.availability$npersondays)), "-",
+                                      aim2.availability.number.days.in.common, "=",
+                                      sum(dataforanalysis.aim2$availability==0)
+                ))
+
+PrintKableTable(output.SummariseAll = aim4.availability,
+                mycaption = "Aim 4: Total participants and days not available for meme/GIF per issue/event within days 3-28",
+                mygenfootnote = paste(aim4.availability.number.days.in.common,
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim4.availability$npersondays)), "-",
+                                      aim4.availability.number.days.in.common, "=",
+                                      sum(dataforanalysis.aim4$availability==0)
+                ))
+```
+
+
+# Missing Intervention Assignment
+
+```{r, echo = FALSE}
+# Tabulate overall number of person days with missing intervention variable by aim
+tab.miss.overall <- data.frame(aim1 = c(sum(!(is.na(dataforanalysis.aim1$isRandomized)) & dataforanalysis.aim1$availability==1), 
+                                        sum((is.na(dataforanalysis.aim1$isRandomized)) & dataforanalysis.aim1$availability==1)), 
+                               aim2 = c(sum(!(is.na(dataforanalysis.aim2$isRandomized)) & dataforanalysis.aim2$availability==1), 
+                                        sum(is.na(dataforanalysis.aim2$isRandomized) & dataforanalysis.aim2$availability==1)),
+                               aim4 = c(sum(!(is.na(dataforanalysis.aim4$isRandomized)) & dataforanalysis.aim4$availability==1), 
+                                        sum(is.na(dataforanalysis.aim4$isRandomized) & dataforanalysis.aim4$availability==1))
+                               )
+
+tab.miss.overall <- rbind(tab.miss.overall, colSums(tab.miss.overall))
+tab.miss.overall <- as.data.frame(tab.miss.overall)
+row.names(tab.miss.overall) <-  c("No. available participant days having an intervention assignment", 
+                                  "No. available participant days having missing intervention assignment",
+                                  "Total")
+
+kable(tab.miss.overall, format = "latex",
+      caption = "Total participant days having missing intervention assignment among available participant days",
+      align = c('c', 'c', 'c'),
+      col.names = c("Aim 1","Aim 2","Aim 4"),
+      booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) %>%
+  row_spec(2, hline_after = TRUE)
+```
+
+
+```{r, echo = FALSE}
+availability.4PM.data <- ReadAll(path.to.files = path.aim1.availability, CleanData = CleanAvailabilityData)
+availability.4PM.data <- GetWithinStudyPeriod(availability.4PM.data, map.long.aim1)
+availability.4PM.data$availability <- replace(availability.4PM.data$availability, availability.4PM.data$in.df==0, 1)
+availability.4PM.data <- availability.4PM.data[,!(colnames(availability.4PM.data) %in% c("study_day","in.df"))]
+availability.4PM.data <- availability.4PM.data[availability.4PM.data$availability==1,]
+
+availability.memegif.data <- ReadAll(path.to.files = path.aim2.availability, CleanData = CleanAvailabilityData)
+availability.memegif.data <- GetWithinStudyPeriod(availability.memegif.data, map.long.aim2)
+availability.memegif.data$availability <- replace(availability.memegif.data$availability, availability.memegif.data$in.df==0, 1)
+availability.memegif.data <- availability.memegif.data[,!(colnames(availability.memegif.data) %in% c("study_day","in.df"))]
+
+availability.lifeinsight.data <- ReadAll(path.to.files = path.aim4.availability, CleanData = CleanAvailabilityData)
+availability.lifeinsight.data <- GetWithinStudyPeriod(availability.lifeinsight.data, map.long.aim4)
+availability.lifeinsight.data$availability <- replace(availability.lifeinsight.data$availability, availability.lifeinsight.data$in.df==0, 1)
+availability.lifeinsight.data <- availability.lifeinsight.data[,!(colnames(availability.lifeinsight.data) %in% c("study_day","in.df"))]
+
+aim1.missing.intervention <- SummariseAll(path.aim1.missing.intervention, availability.4PM.data)
+aim2.missing.intervention <- SummariseAll(path.aim2.missing.intervention, availability.memegif.data)
+aim4.missing.intervention <- SummariseAll(path.aim4.missing.intervention, availability.lifeinsight.data)
+
+aim1.missing.commondays <- GetCommonPersonDays(path.aim1.missing.intervention, availability.4PM.data)
+aim2.missing.commondays  <- GetCommonPersonDays(path.aim2.missing.intervention, availability.memegif.data)
+aim4.missing.commondays  <- GetCommonPersonDays(path.aim4.missing.intervention, availability.lifeinsight.data)
+
+aim1.missing.number.days.in.common <- sum(aim1.missing.commondays$in.more.dfs>1)
+aim2.missing.number.days.in.common <- sum(aim2.missing.commondays$in.more.dfs>1)
+aim4.missing.number.days.in.common <- sum(aim4.missing.commondays$in.more.dfs>1)
+```
+
+
+```{r, echo = FALSE}
+PrintKableTable(output.SummariseAll = aim1.missing.intervention, 
+                mycaption = "Aim 1: Total participants and days having missing intervention assignment among available participant days within days 1-29",
+                mygenfootnote = paste(aim1.missing.number.days.in.common, 
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim1.missing.intervention$npersondays)), "-",
+                                      aim1.missing.number.days.in.common, "=",
+                                      sum(is.na(dataforanalysis.aim1$isRandomized) & dataforanalysis.aim1$availability==1)
+                                      ))
+
+PrintKableTable(output.SummariseAll = aim2.missing.intervention, 
+                mycaption = "Aim 2: Total participants and days having missing intervention assignment among available participant days within days 1-28",
+                mygenfootnote = paste(aim2.missing.number.days.in.common, 
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim2.missing.intervention$npersondays)), "-",
+                                      aim2.missing.number.days.in.common, "=",
+                                      sum(is.na(dataforanalysis.aim2$isRandomized) & dataforanalysis.aim2$availability==1)
+                                      ))
+
+PrintKableTable(output.SummariseAll = aim4.missing.intervention, 
+                mycaption = "Aim 4: Total participants and days having missing intervention assignment among available participant days within days 3-28",
+                mygenfootnote = paste(aim4.missing.number.days.in.common, 
+                                      "participant days are impacted by more than one issue/event. Hence,",
+                                      sum(as.data.frame(aim4.missing.intervention$npersondays)), "-",
+                                      aim4.missing.number.days.in.common, "=",
+                                      sum(is.na(dataforanalysis.aim4$isRandomized) & dataforanalysis.aim4$availability==1)
+                                      ))
+```
+
+
+
+# Control Covariates
+
+```{r, echo = FALSE}
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim1.nparticipantdays.yes <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"isCompleted_yesterday_yes"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.no <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"isCompleted_yesterday_no"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.unknown <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"isCompleted_yesterday_unknown"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim2.nparticipantdays.yes <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"isCompleted_yesterday_yes"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.no <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"isCompleted_yesterday_no"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.unknown <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"isCompleted_yesterday_unknown"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim4.nparticipantdays.yes <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"isCompleted_yesterday_yes"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.no <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"isCompleted_yesterday_no"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.unknown <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"isCompleted_yesterday_unknown"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+
+tab.covariate <- data.frame(aim1.nparticipantdays = c(aim1.nparticipantdays.yes, aim1.nparticipantdays.no, aim1.nparticipantdays.unknown),
+                            aim2.nparticipantdays = c(aim2.nparticipantdays.yes, aim2.nparticipantdays.no, aim2.nparticipantdays.unknown),
+                            aim4.nparticipantdays = c(aim4.nparticipantdays.yes, aim4.nparticipantdays.no, aim4.nparticipantdays.unknown)
+                            )
+tab.covariate <- rbind(tab.covariate, colSums(tab.covariate))
+
+row.names(tab.covariate) <- c("isCompleted_yesterday_yes=1", "isCompleted_yesterday_no=1", "isCompleted_yesterday_unknown=1", "Total available participant days")
+colnames(tab.covariate) <- c("No. Participant Days", "No. Participant Days", "No. Participant Days")
+kable(tab.covariate, booktabs = TRUE, caption = "Total participant days with ``YES'', ``NO'', or ``UNKNOWN''among available") %>%
+  add_header_above(c(" "=1, "Aim 1" = 1, "Aim 2" = 1, "Aim 4" = 1)) %>%
+  kable_styling(latex_options = c("scale_down","HOLD_position"), full_width = FALSE) %>%
+  row_spec(3, hline_after = TRUE)
+```
+
+
+```{r, echo = FALSE}
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim1.nparticipantdays.yes <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"contact_yes"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.no <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"contact_no"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.unknown <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"contact_unknown"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim2.nparticipantdays.yes <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"contact_yes"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.no <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"contact_no"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.unknown <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"contact_unknown"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim4.nparticipantdays.yes <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"contact_yes"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.no <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"contact_no"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.unknown <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"contact_unknown"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+
+tab.covariate <- data.frame(aim1.nparticipantdays = c(aim1.nparticipantdays.yes, aim1.nparticipantdays.no, aim1.nparticipantdays.unknown),
+                            aim2.nparticipantdays = c(aim2.nparticipantdays.yes, aim2.nparticipantdays.no, aim2.nparticipantdays.unknown),
+                            aim4.nparticipantdays = c(aim4.nparticipantdays.yes, aim4.nparticipantdays.no, aim4.nparticipantdays.unknown)
+                            )
+tab.covariate <- rbind(tab.covariate, colSums(tab.covariate))
+
+row.names(tab.covariate) <- c("contact_yes=1", "contact_no=1", "contact_unknown=1", "Total available participant days")
+colnames(tab.covariate) <- c("No. Participant Days", "No. Participant Days", "No. Participant Days")
+kable(tab.covariate, booktabs = TRUE, caption = "Total participant days with ``YES'', ``NO'', or ``UNKNOWN''among available") %>%
+  add_header_above(c(" "=1, "Aim 1" = 1, "Aim 2" = 1, "Aim 4" = 1)) %>%
+  kable_styling(latex_options = c("scale_down","HOLD_position"), full_width = FALSE) %>%
+  row_spec(3, hline_after = TRUE)
+```
+
+
+```{r, echo = FALSE}
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim1.nparticipantdays.yes <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"appusage_yes"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.no <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"appusage_no"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+# No. of participant days
+aim1.nparticipantdays.unknown <- nrow(dataforanalysis.aim1[dataforanalysis.aim1[,"appusage_unknown"]==1 & dataforanalysis.aim1[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim2.nparticipantdays.yes <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"appusage_yes"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.no <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"appusage_no"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+# No. of participant days
+aim2.nparticipantdays.unknown <- nrow(dataforanalysis.aim2[dataforanalysis.aim2[,"appusage_unknown"]==1 & dataforanalysis.aim2[,"availability"]==1,])
+
+# Tabulate "yes", "no, "unknown"
+# No. of participant days
+aim4.nparticipantdays.yes <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"appusage_yes"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.no <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"appusage_no"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+# No. of participant days
+aim4.nparticipantdays.unknown <- nrow(dataforanalysis.aim4[dataforanalysis.aim4[,"appusage_unknown"]==1 & dataforanalysis.aim4[,"availability"]==1,])
+
+tab.covariate <- data.frame(aim1.nparticipantdays = c(aim1.nparticipantdays.yes, aim1.nparticipantdays.no, aim1.nparticipantdays.unknown),
+                            aim2.nparticipantdays = c(aim2.nparticipantdays.yes, aim2.nparticipantdays.no, aim2.nparticipantdays.unknown),
+                            aim4.nparticipantdays = c(aim4.nparticipantdays.yes, aim4.nparticipantdays.no, aim4.nparticipantdays.unknown)
+                            )
+tab.covariate <- rbind(tab.covariate, colSums(tab.covariate))
+
+row.names(tab.covariate) <- c("appusage_yes=1", "appusage_no=1", "appusage_unknown=1", "Total available participant days")
+colnames(tab.covariate) <- c("No. Participant Days", "No. Participant Days", "No. Participant Days")
+kable(tab.covariate, booktabs = TRUE, caption = "Total participant days with ``YES'', ``NO'', or ``UNKNOWN''among available") %>%
+  add_header_above(c(" "=1, "Aim 1" = 1, "Aim 2" = 1, "Aim 4" = 1)) %>%
+  kable_styling(latex_options = c("scale_down","HOLD_position"), full_width = FALSE) %>%
+  row_spec(3, hline_after = TRUE)
+```
+
+
+

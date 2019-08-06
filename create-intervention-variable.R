@@ -80,7 +80,7 @@ subset.memegif.data <- subset.memegif.data[, !(colnames(subset.memegif.data)%in%
 # Obtain availability to aim 2 intervention for each participant day in map.long
 outcomedata <- read.csv(file.path(path.dataforanalysis, "outcomedata.csv"))
 non.completion.daily.survey <- outcomedata[outcomedata$daily_survey_isCompleted == 0, c("username", "calendar_date")]
-write.csv(non.completion.daily.survey, file.path(path.aim2.availability, "noncompletion.csv"), row.names = FALSE)
+write.csv(non.completion.daily.survey, file.path(path.aim2.availability, "noncompletion_aim2.csv"), row.names = FALSE)
 
 availability.memegif.data <- ReadAll(path.to.files = path.aim2.availability, CleanData = CleanAvailabilityData)
 availability.memegif.data <- GetWithinStudyPeriod(availability.memegif.data, map.long)

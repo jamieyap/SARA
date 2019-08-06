@@ -1,3 +1,5 @@
+library(knitr)
+
 # About File: -----------------------------------------------------------------
 # io-utils.R contains functions to perform input/output tasks
 

@@ -55,7 +55,7 @@ dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysi
 ```{r, echo = FALSE, warning = FALSE}
 # Read in other info relevant to all aims
 participant.days.to.exclude <- ReadAll(path.to.files = path.exclude.all)
-map.wide <- map.wide <- ReadAll(path.to.files = path.mapdata)
+map.wide <- ReadAll(path.to.files = path.mapdata)
 
 # Read in other relevant info for Aim 1
 map.long.aim1 <- DropAll(LongMap(map.wide), participant.days.to.exclude)

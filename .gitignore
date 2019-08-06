@@ -2,6 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
+
 check-randomization.aux
 check-randomization.log
 check-randomization.out
+
+sara-tables-main.aux
+sara-tables-main.log
+sara-tables-main.out
+sara-tables-supp.Rmd
