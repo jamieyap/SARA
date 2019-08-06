@@ -54,26 +54,32 @@ CheckQualityOfRand <- function(dataforanalysis.aimX){
                                              data = dataforanalysis.aimX[dataforanalysis.aimX$availability==1,], 
                                              mean, na.rm = TRUE)
   
+  # Balance scrore for app usage control covariate
   balance.appusage.aimX <- aggregate(appusage_yes ~ study_day + isRandomized, 
                                      data = dataforanalysis.aimX[dataforanalysis.aimX$availability==1,], 
                                      mean, na.rm = TRUE)
   score.balance.appusage.aimX <- balance.appusage.aimX[balance.appusage.aimX$isRandomized==1,"appusage_yes"] - balance.appusage.aimX[balance.appusage.aimX$isRandomized==0,"appusage_yes"]
+  score.balance.appusage.aimX <- cbind(empiricalprob.assignment.aimX$study_day, score.balance.appusage.aimX)
   
+  # Balance score on previous day outcome control covariate
   balance.prevday.outcome.aimX <- aggregate(isCompleted_yesterday_yes ~ study_day + isRandomized, 
                                             data = dataforanalysis.aimX[dataforanalysis.aimX$availability==1,], 
                                             mean, na.rm = TRUE)
   score.balance.prevday.outcome.aimX <- balance.prevday.outcome.aimX[balance.prevday.outcome.aimX$isRandomized==1,"isCompleted_yesterday_yes"] - balance.prevday.outcome.aimX[balance.prevday.outcome.aimX$isRandomized==0,"isCompleted_yesterday_yes"]
+  score.balance.prevday.outcome.aimX <- cbind(empiricalprob.assignment.aimX$study_day, score.balance.prevday.outcome.aimX)
   
-  
+  # Balance score for contact by study staff control covariate
   balance.contact_yes.aimX <- aggregate(contact_yes ~ study_day + isRandomized, 
                                         data = dataforanalysis.aimX[dataforanalysis.aimX$availability==1,], 
                                         mean, na.rm = TRUE)
   score.balance.contact_yes.aimX <- balance.contact_yes.aimX[balance.contact_yes.aimX$isRandomized==1,"contact_yes"] - balance.contact_yes.aimX[balance.contact_yes.aimX$isRandomized==0,"contact_yes"]
-  
+  score.balance.contact_yes.aimX <- cbind(empiricalprob.assignment.aimX$study_day, score.balance.contact_yes.aimX)
+
+  # Calculate score
   check.rand.quality <- data.frame(aimX = c(mean(empiricalprob.assignment.aimX[,2]),
-                                            mean(score.balance.appusage.aimX),
-                                            mean(score.balance.prevday.outcome.aimX),
-                                            mean(score.balance.contact_yes.aimX)))
+                                            mean(score.balance.appusage.aimX[,2]),
+                                            mean(score.balance.prevday.outcome.aimX[,2]),
+                                            mean(score.balance.contact_yes.aimX[,2])))
   check.rand.quality <- round(check.rand.quality, digits = 2)
   row.names(check.rand.quality) <- c("Average: empirical probability of being offered an intervention", 
                                       "Average: balance score of appusage_yes", 
@@ -87,3 +93,5 @@ CheckQualityOfRand <- function(dataforanalysis.aimX){
               check.rand.quality = check.rand.quality)
          )
 }
+
+

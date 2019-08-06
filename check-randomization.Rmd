@@ -1,0 +1,656 @@
+---
+title: "SARA: Quality of Randomization"
+author: "Jamie Yap"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+geometry: margin=1in
+output: 
+  pdf_document:
+    number_sections: TRUE
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(tidy = TRUE)
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+set.seed(54239212)
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+
+# Read in file paths and source scripts
+path.code <- Sys.getenv("path.code")  # Location of all code
+path.readme <- Sys.getenv("path.readme")  # Location of files for creating this document
+path.dataforanalysis <- Sys.getenv("path.dataforanalysis")  # Location of files to be used for data analysis
+
+path.aim1.availability <- Sys.getenv("path.aim1.availability")  # Location of files indicating availability for Aim 1 for a given participant-day
+path.aim2.availability <- Sys.getenv("path.aim2.availability")  # Location of files indicating availability for Aim 2 for a given participant-day
+path.aim4.availability <- Sys.getenv("path.aim4.availability")  # Location of files indicating availability for Aim 4 for a given participant-day
+
+path.aim1.missing.intervention <- Sys.getenv("path.aim1.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 1 for a given participant-day
+path.aim2.missing.intervention <- Sys.getenv("path.aim2.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 2 for a given participant-day
+path.aim4.missing.intervention <- Sys.getenv("path.aim4.missing.intervention")  # Location of files indicating missing intervention assignment for Aim 4 for a given participant-day
+
+path.mapdata <- Sys.getenv("path.mapdata") # Location of file mapping days and dates for study participants
+path.exclude.all <- Sys.getenv("path.exclude.all")  # Location of files indicating which participant-days to exclude from all aims
+this.participant.withdrew <- Sys.getenv("this.participant.withdrew")
+
+source(file.path(path.code, "io-utils.R"))
+source(file.path(path.code, "data-manip-utils.R"))
+source(file.path(path.code, "file-check-utils.R"))
+source(file.path(path.code, "main-utils.R"))
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+# Read in data for analysis
+dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+# Read in other info relevant to all aims
+participant.days.to.exclude <- ReadAll(path.to.files = path.exclude.all)
+map.wide <- map.wide <- ReadAll(path.to.files = path.mapdata)
+
+# Read in other relevant info for Aim 1
+map.long.aim1 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+
+# Exclude study days in Aim 2
+dataforanalysis.aim2 <- dataforanalysis.aim2[!(dataforanalysis.aim2$study_day==29),]  #Exclude very last day
+dataforanalysis.aim2 <- dataforanalysis.aim2[!(dataforanalysis.aim2$username==this.participant.withdrew & dataforanalysis.aim2$study_day==11),]  #Exclude very last day for this.participant.withdrew
+map.long.aim2 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+map.long.aim2 <- map.long.aim2[!(map.long.aim2$study_day==29),] # Exclude very last day
+map.long.aim2 <- map.long.aim2[!(map.long.aim2$username==this.participant.withdrew & map.long.aim2$study_day==11),] # Exclude last day for this.participant.withdrew
+map.long.aim2 <- merge(map.long.aim2, dataforanalysis.aim2[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+map.long.aim2 <- map.long.aim2[map.long.aim2$memegifbug==0,] # Only include participants who were not affected by bug
+map.long.aim2 <- map.long.aim2[, colnames(map.long.aim2) %in% c("username", "study_day", "calendar_date")]
+dataforanalysis.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$memegifbug == 0,]  # Only include participants who were not affected by bug
+
+# Exclude study days in Aim 4
+dataforanalysis.aim4 <- dataforanalysis.aim4[!(dataforanalysis.aim4$study_day==29),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[!(dataforanalysis.aim4$username==this.participant.withdrew & dataforanalysis.aim4$study_day==11),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[(dataforanalysis.aim4$study_day>=3),]
+dataforanalysis.aim4 <- dataforanalysis.aim4[dataforanalysis.aim4$memegifbug==0,]
+map.long.aim4 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
+map.long.aim4 <- map.long.aim4[!(map.long.aim4$study_day==29),] # Exclude very last day
+map.long.aim4 <- map.long.aim4[!(map.long.aim4$username==this.participant.withdrew & map.long.aim4$study_day==11),] # Exclude last day for this.participant.withdrew
+map.long.aim4 <- map.long.aim4[(map.long.aim4$study_day>=3),] # Exclude day 1 and 2
+map.long.aim4 <- merge(map.long.aim4, dataforanalysis.aim4[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+map.long.aim4 <- map.long.aim4[map.long.aim4$memegifbug==0,] # Only include participants who were not affected by bug
+map.long.aim4 <- map.long.aim4[, colnames(map.long.aim4) %in% c("username", "study_day", "calendar_date")]
+```
+
+
+```{r, echo = FALSE}
+dat.plot.index.aim1 <- data.frame(username = unique(dataforanalysis.aim1$username), plotindex = 1:length(unique(dataforanalysis.aim1$username)))
+dat.plot.index.aim2 <- data.frame(username = unique(dataforanalysis.aim2$username), plotindex = 1:length(unique(dataforanalysis.aim2$username)))
+dat.plot.index.aim4 <- data.frame(username = unique(dataforanalysis.aim4$username), plotindex = 1:length(unique(dataforanalysis.aim4$username)))
+
+dataforanalysis.aim1 <- merge(dataforanalysis.aim1, dat.plot.index.aim1, by = "username", all.x = TRUE, all.y = TRUE)
+dataforanalysis.aim2 <- merge(dataforanalysis.aim2, dat.plot.index.aim2, by = "username", all.x = TRUE, all.y = TRUE)
+dataforanalysis.aim4 <- merge(dataforanalysis.aim4, dat.plot.index.aim4, by = "username", all.x = TRUE, all.y = TRUE)
+```
+
+
+```{r, echo = FALSE}
+# Perform imputation on missing intervention assignment
+imputed.dataforanalysis.aim1 <- ImputeInterventionAssignment(dataforanalysis.aim1)
+imputed.dataforanalysis.aim2 <- ImputeInterventionAssignment(dataforanalysis.aim2)
+imputed.dataforanalysis.aim4 <- ImputeInterventionAssignment(dataforanalysis.aim4)
+```
+
+
+This document provides details on quality of randomization of the SARA micro-randomized trial and is divided into three sections. \newline
+**Section 1:** plots of availability over time. \newline
+**Section 2:** plots of covariates across time using available participant days.\newline
+**Section 3:** checks on the quality of randomization and balance in control covariates among available participant days. 
+
+# Plots of Availability over Time
+
+```{r, fig.width=5.5, fig.height = 5.5, fig.align='center',echo = FALSE, fig.cap = "Proportion of participants available for intervention per study day"}
+availability.plotdat.aim1 <- aggregate(availability ~ study_day, 
+                                   data = dataforanalysis.aim1, 
+                                   mean)
+plot(availability.plotdat.aim1, 
+     main = "",
+     xlab = "Study day", 
+     ylab = "Proportion",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+
+availability.plotdat.aim2 <- aggregate(availability ~ study_day, 
+                                   data = dataforanalysis.aim2, 
+                                   mean)
+points(availability.plotdat.aim2, pch = 24, bg = "grey")
+
+availability.plotdat.aim4 <- aggregate(availability ~ study_day, 
+                                   data = dataforanalysis.aim4, 
+                                   mean)
+points(availability.plotdat.aim4, pch = 22, bg = "grey")
+
+legend(18,0.15, c("Aim 1: 4PM Notification", "Aim 2: Memes", "Aim 4: Life Insights"), 
+       pch = c(21,24,22), pt.bg = c("grey","grey","grey"),cex = 0.7)
+```
+
+```{r, fig.width=5.5, fig.height = 5.5, fig.align='center',echo = FALSE, fig.cap = "Proportion of participants with no intervention assignment among available participants per study day"}
+miss.assignment.plotdat.aim1 <- aggregate((is.na(isRandomized) & (availability==1)) ~ study_day, 
+                                   data = dataforanalysis.aim1, 
+                                   mean)
+plot(miss.assignment.plotdat.aim1, 
+     main = "",
+     xlab = "Study day", 
+     ylab = "Proportion",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+
+
+miss.assignment.plotdat.aim2 <- aggregate((is.na(isRandomized) & (availability==1)) ~ study_day, 
+                                   data = dataforanalysis.aim2, 
+                                   mean)
+points(miss.assignment.plotdat.aim2, pch = 24, bg = "grey")
+
+miss.assignment.plotdat.aim4 <- aggregate((is.na(isRandomized) & (availability==1)) ~ study_day, 
+                                   data = dataforanalysis.aim4, 
+                                   mean)
+points(miss.assignment.plotdat.aim4, pch = 22, bg = "grey")
+
+legend(18,0.95, c("Aim 1: 4PM Notification", "Aim 2: Memes", "Aim 4: Life Insights"), 
+       pch = c(21,24,22), pt.bg = c("grey","grey","grey"),cex = 0.7)
+```
+
+\pagebreak
+
+```{r, fig.width=7, fig.height = 12, fig.align='center',echo = FALSE, fig.cap = "Aim 1: Participant days available for intervention but having no intervention assignment"}
+
+avail.aim1 <- dataforanalysis.aim1[dataforanalysis.aim1$availability==1,c("plotindex", "study_day")]
+
+avail.miss.aim1 <- dataforanalysis.aim1[dataforanalysis.aim1$availability==1 & is.na(dataforanalysis.aim1$isRandomized),c("plotindex", "study_day")]
+
+plot(avail.aim1$study_day,avail.aim1$plotindex, yaxt = "n", main = "",
+     xlab = "Study day", 
+     ylab = "Each row corresponds to one participant",
+     xlim = c(1,29),
+     pch = 21, bg = "grey",
+     mar = c(5.1,4.1,6.1,2.1))
+
+points(avail.miss.aim1$study_day,avail.miss.aim1$plotindex, pch = 8, col = "red")
+
+unavail.aim1 <- dataforanalysis.aim1[dataforanalysis.aim1$availability==0,c("plotindex", "study_day")]
+
+unavail.miss.aim1 <- dataforanalysis.aim1[(dataforanalysis.aim1$availability==0 & 
+                                             is.na(dataforanalysis.aim1$isRandomized)),c("plotindex", "study_day")]
+
+points(unavail.aim1$study_day,unavail.aim1$plotindex, pch = 1)
+points(unavail.miss.aim1$study_day,unavail.miss.aim1$plotindex, pch = 8, col = "blue")
+
+legend(0,76, c("Available", 
+               "Available With No Intervention Assignment"), 
+       pch = c(21,8), col = c("black","red"), pt.bg = c("grey","red"), cex = 0.72, 
+       xpd = TRUE)
+
+legend(15,76, c("Unavailable",
+               "Unavailable with No Intervention Assignment"), 
+       pch = c(1,8), col = c("black","blue"), pt.bg = c("white","white"), cex = 0.72, 
+       xpd = TRUE)
+
+```
+
+\pagebreak
+
+```{r, fig.width=7, fig.height = 12, fig.align='center',echo = FALSE, fig.cap = "Aim 2: Participant days available for intervention but having no intervention assignment"}
+
+avail.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$availability==1,c("plotindex", "study_day")]
+
+avail.miss.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$availability==1 & is.na(dataforanalysis.aim2$isRandomized),c("plotindex", "study_day")]
+
+plot(avail.aim2$study_day,avail.aim2$plotindex, yaxt = "n", main = "",
+     xlab = "Study day", 
+     ylab = "Each row corresponds to one participant",
+     xlim = c(1,29),
+     pch = 21, bg = "grey",
+     mar = c(5.1,4.1,6.1,2.1))
+
+points(avail.miss.aim2$study_day,avail.miss.aim2$plotindex, pch = 8, col = "red")
+
+unavail.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$availability==0,c("plotindex", "study_day")]
+
+unavail.miss.aim2 <- dataforanalysis.aim2[(dataforanalysis.aim2$availability==0 & 
+                                             is.na(dataforanalysis.aim2$isRandomized)),c("plotindex", "study_day")]
+
+points(unavail.aim2$study_day,unavail.aim2$plotindex, pch = 1)
+points(unavail.miss.aim2$study_day,unavail.miss.aim2$plotindex, pch = 8, col = "blue")
+
+legend(0,56, c("Available", 
+               "Available With No Intervention Assignment"), 
+       pch = c(21,8), col = c("black","red"), pt.bg = c("grey","red"), cex = 0.72, 
+       xpd = TRUE)
+
+legend(15,56, c("Unavailable",
+               "Unavailable with No Intervention Assignment"), 
+       pch = c(1,8), col = c("black","blue"), pt.bg = c("white","white"), cex = 0.72, 
+       xpd = TRUE)
+
+```
+
+
+\pagebreak
+
+```{r, fig.width=7, fig.height = 12, fig.align='center',echo = FALSE, fig.cap = "Aim 4: Participant days available for intervention but having no intervention assignment"}
+
+avail.aim4 <- dataforanalysis.aim4[dataforanalysis.aim4$availability==1,c("plotindex", "study_day")]
+
+avail.miss.aim4 <- dataforanalysis.aim4[dataforanalysis.aim4$availability==1 & is.na(dataforanalysis.aim4$isRandomized),c("plotindex", "study_day")]
+
+plot(avail.aim4$study_day,avail.aim4$plotindex, yaxt = "n", main = "",
+     xlab = "Study day", 
+     ylab = "Each row corresponds to one participant",
+     xlim = c(1,29),
+     pch = 21, bg = "grey",
+     mar = c(5.1,4.1,6.1,2.1))
+
+points(avail.miss.aim4$study_day,avail.miss.aim4$plotindex, pch = 8, col = "red")
+
+unavail.aim4 <- dataforanalysis.aim4[dataforanalysis.aim4$availability==0,c("plotindex", "study_day")]
+
+unavail.miss.aim4 <- dataforanalysis.aim4[(dataforanalysis.aim4$availability==0 & 
+                                             is.na(dataforanalysis.aim4$isRandomized)),c("plotindex", "study_day")]
+
+points(unavail.aim4$study_day,unavail.aim4$plotindex, pch = 1)
+points(unavail.miss.aim4$study_day,unavail.miss.aim4$plotindex, pch = 8, col = "blue")
+
+legend(0,56, c("Available", 
+               "Available With No Intervention Assignment"), 
+       pch = c(21,8), col = c("black","red"), pt.bg = c("grey","red"), cex = 0.72, 
+       xpd = TRUE)
+
+legend(15,56, c("Unavailable",
+               "Unavailable with No Intervention Assignment"), 
+       pch = c(1,8), col = c("black","blue"), pt.bg = c("white","white"), cex = 0.72, 
+       xpd = TRUE)
+
+```
+
+\pagebreak
+
+# Plots of Variables using Available Participant Days
+
+```{r, fig.width=5.5, fig.height = 5.5, fig.align='center',echo = FALSE, fig.cap = "Aim 1: Proportion of participants who completed survey/active tasks in the evening of the same day among available participants per study day, Aim 2: Proportion of participants who completed survey/active tasks the following day among available participants per study day, Aim 4: Proportion of participants who completed survey/active tasks the following day among available participants per study day"}
+outcome.plotdat.aim1 <- aggregate( isCompleted ~ study_day, 
+                                   data = dataforanalysis.aim1[dataforanalysis.aim1$availability==1,], 
+                                   mean)
+plot(outcome.plotdat.aim1, 
+     main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+
+
+outcome.plotdat.plotdat.aim2 <- aggregate(isCompleted_tomorrow ~ study_day, 
+                                   data = dataforanalysis.aim2[dataforanalysis.aim2$availability==1,], 
+                                   mean)
+points(outcome.plotdat.plotdat.aim2, pch = 24, bg = "grey")
+
+outcome.plotdat.plotdat.aim4 <- aggregate(isCompleted_tomorrow ~ study_day, 
+                                   data = dataforanalysis.aim4[dataforanalysis.aim4$availability==1,], 
+                                   mean)
+points(outcome.plotdat.plotdat.aim4, pch = 22, bg = "grey")
+
+legend(18,0.15, c("Aim 1: 4PM Notification", "Aim 2: Memes","Aim 4: Life Insights"), 
+       pch = c(21,24,22), pt.bg = c("grey","grey","grey"),cex = 0.7)
+```
+
+\pagebreak
+
+```{r, fig.width=5.5, fig.height = 5.5, fig.align='center',echo = FALSE, fig.cap = "Aim 1: Proportion of participants who opened the app in the prior 72 hours since time T outside of survey/task completion among available participants per study day, Aim 2: Proportion of participants who opened the app in the prior 80 hours since time T outside of survey/task completion among available participants per study day, Aim 4: Proportion of participants who opened the app in the prior 80 hours since time T outside of survey/task completion among available participants per study day"}
+appusage.plotdat.aim1 <- aggregate(appusage_yes ~ study_day, 
+                                   data = dataforanalysis.aim1[dataforanalysis.aim1$availability==1,], 
+                                   mean)
+plot(appusage.plotdat.aim1, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+title(main = list("", cex = 0.9))
+
+appusage.plotdat.aim2 <- aggregate(appusage_yes ~ study_day, 
+                                   data = dataforanalysis.aim2[dataforanalysis.aim2$availability==1,], 
+                                   mean)
+points(appusage.plotdat.aim2, pch = 24, bg = "grey")
+
+appusage.plotdat.aim4 <- aggregate(appusage_yes ~ study_day, 
+                                   data = dataforanalysis.aim4[dataforanalysis.aim4$availability==1,], 
+                                   mean)
+points(appusage.plotdat.aim4, pch = 22, bg = "grey")
+
+legend(18,0.15, c("Aim 1: 4PM Notification", "Aim 2: Memes", "Aim 4: Life Insights"), 
+       pch = c(21,24,22), pt.bg = c("grey","grey","grey"),cex = 0.7)
+```
+
+\pagebreak
+
+```{r, fig.width=5.5, fig.height = 5.5, fig.align='center',echo = FALSE, fig.cap = "Aim 1: Proportion of participants to whom staff made text or phone calls in the last 24 hours since time T among available participants per study day, Aim 2: Proportion of participants to whom staff made text or phone calls in the last 30 hours since time T among available participants per study day, Aim 4: Proportion of participants to whom staff made text or phone calls in the last 30 hours since time T among available participants per study day"}
+contact_yes.plotdat.aim1 <- aggregate(contact_yes ~ study_day, 
+                                   data = dataforanalysis.aim1[dataforanalysis.aim1$availability==1,], 
+                                   mean)
+plot(contact_yes.plotdat.aim1, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+
+contact_yes.plotdat.aim2 <- aggregate(contact_yes ~ study_day, 
+                                   data = dataforanalysis.aim2[dataforanalysis.aim2$availability==1,], 
+                                   mean)
+points(contact_yes.plotdat.aim2, pch = 24, bg = "grey")
+
+contact_yes.plotdat.aim4 <- aggregate(contact_yes ~ study_day, 
+                                   data = dataforanalysis.aim4[dataforanalysis.aim4$availability==1,], 
+                                   mean)
+points(contact_yes.plotdat.aim4, pch = 22, bg = "grey")
+
+legend(0.2,1, c("Aim 1: 4PM Notification", "Aim 2: Memes", "Aim 4: Life Insights"), 
+       pch = c(21,24,22), pt.bg = c("grey","grey","grey"),cex = 0.7)
+```
+
+\pagebreak
+
+
+# Checks on Quality of Randomization
+
+## Background 
+
+To check the quality of randomization:
+
+1.	We calculated the proportion of participants assigned to be offered an intervention for every given day using all participants available on that day. Further, we plotted this proportion across all study days. The randomization went as planned if this proportion is approximately equal to 0.50 on average across all days.
+
+2.	For each control covariate, we calculated a ‘balance score’ at each randomization point.  Since all three control covariates are binary, the  balance  score  was  defined  as  the difference  in  probability of the control covariate being equal to 1 between  those  assigned to be offered an intervention and  those  assigned to be offered no intervention calculated using all participants available on that day.  Further, we plotted this quantity across all study days. Balance is achieved if the balance score is approximately equal to zero on average across all days.
+
+Checks on quality of randomization were performed before imputation of missing intervention assignment and after imputation of missing intervention assignment; similar results were obtained from both.
+
+## Results of Checks
+
+```{r, echo = FALSE}
+# After imputation of missing intervention assignment on available participant days
+
+afterimputation.randquality.aim1 <- CheckQualityOfRand(imputed.dataforanalysis.aim1)
+afterimputation.randquality.aim2 <- CheckQualityOfRand(imputed.dataforanalysis.aim2)
+afterimputation.randquality.aim4 <- CheckQualityOfRand(imputed.dataforanalysis.aim4)
+
+kable(afterimputation.randquality.aim1$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (After imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 1"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) 
+
+kable(afterimputation.randquality.aim2$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (After imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 2"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) 
+
+kable(afterimputation.randquality.aim4$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (After imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 4"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) 
+
+
+```
+
+```{r, echo = FALSE}
+# No imputation of missing intervention assignment on available participant days
+noimputation.randquality.aim1 <- CheckQualityOfRand(dataforanalysis.aim1)
+kable(noimputation.randquality.aim1$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (No imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 1"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position"))
+
+noimputation.randquality.aim2 <- CheckQualityOfRand(dataforanalysis.aim2)
+kable(noimputation.randquality.aim2$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (No imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 2"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position"))
+
+noimputation.randquality.aim4 <- CheckQualityOfRand(dataforanalysis.aim4)
+kable(noimputation.randquality.aim4$check.rand.quality , format = "latex", 
+      caption = "Checks on quality of randomization (No imputation of missing intervention assignment on available participant days): Quantities below were calculated using all available participants for each study day and averages presented are taken across all study days",
+      align = c('c'),
+      col.names = c("Aim 4"),
+      row.names = TRUE, booktabs = TRUE) %>% 
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position"))
+
+```
+
+\pagebreak
+
+<!--After imputation-->
+
+```{r, fig.width=14, fig.height = 14, fig.align='center',echo = FALSE, fig.cap='Plots to check on quality of randomization after imputation of missing intervention assignment on available participant days. Aim 1: Left column, Aim 2: Center column, Aim 4: Right Column'}
+par(mfrow=c(4,3))
+plot(afterimputation.randquality.aim1$empiricalprob.assignment, 
+     main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Proportion of participants assigned to be offered intervention", cex = 1))
+abline(h = 0.5, lty = 2)
+
+
+plot(afterimputation.randquality.aim2$empiricalprob.assignment, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Proportion of participants assigned to be offered intervention", cex = 1))
+abline(h = 0.5, lty = 2)
+
+
+plot(afterimputation.randquality.aim4$empiricalprob.assignment, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Proportion of participants assigned to be offered intervention", cex = 1))
+abline(h = 0.5, lty = 2)
+
+
+
+plot(afterimputation.randquality.aim1$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days of control covariate:\nwhether the app was opened in the prior 72 hours\nsince time T outside of survey/task completion", cex = 1))
+abline(h = 0, lty = 2)
+
+
+plot(afterimputation.randquality.aim2$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days of control covariate:\nwhether the app was opened in the prior 80 hours\nsince time T outside of survey/task completion ", cex = 1))
+abline(h = 0, lty = 2)
+
+plot(afterimputation.randquality.aim4$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days of control covariate:\nwhether the app was opened in the prior 80 hours\nsince time T outside of survey/task completion ", cex = 1))
+abline(h = 0, lty = 2)
+
+
+plot(afterimputation.randquality.aim1$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days of control covariate:\nwhether the survey and/or active tasks were fully completed in the prior day", cex = 1))
+abline(h = 0, lty = 2)
+
+
+plot(afterimputation.randquality.aim2$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days of control covariate:\nwhether the survey and/or active tasks were fully completed in the prior day", cex = 1))
+abline(h = 0, lty = 2)
+
+plot(afterimputation.randquality.aim4$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days of control covariate:\nwhether the survey and/or active tasks were fully completed in the prior day", cex = 1))
+abline(h = 0, lty = 2)
+
+
+plot(afterimputation.randquality.aim1$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days of control covariate:\nwhether staff text or phone calls were made [to participants]\nin the last 24 hours since time T ", cex = 1))
+abline(h = 0, lty = 2)
+
+
+plot(afterimputation.randquality.aim2$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days of control covariate:\nwhether staff text or phone calls were made [to participants]\nin the last 30 hours since time T ", cex = 1))
+abline(h = 0, lty = 2)
+
+plot(afterimputation.randquality.aim4$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "Balance score",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days of control covariate:\nwhether staff text or phone calls were made [to participants]\nin the last 30 hours since time T ", cex = 1))
+abline(h = 0, lty = 2)
+
+par(mfrow=c(1,1))
+```
+
+<!--No imputation-->
+
+```{r, fig.width=14, fig.height = 14, fig.align='center',echo = FALSE, fig.cap='Plots to check on quality of randomization. No imputation of missing intervention assignment on available participant days. Aim 1: Left column, Aim 2: Center column, Aim 4: Right column'}
+par(mfrow=c(4,3))
+plot(noimputation.randquality.aim1$empiricalprob.assignment, 
+     main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Proportion of participants assigned to be offered intervention\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.9))
+abline(h = 0.5, lty = 2)
+
+plot(noimputation.randquality.aim2$empiricalprob.assignment, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Proportion of participants assigned to be offered intervention\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.9))
+abline(h = 0.5, lty = 2)
+
+plot(noimputation.randquality.aim4$empiricalprob.assignment, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(0,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Proportion of participants assigned to be offered intervention\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.9))
+abline(h = 0.5, lty = 2)
+
+plot(noimputation.randquality.aim1$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days:\nwhether or not participant opened app outside of survey or\nactive task completion in the past 72 hours from time T\n(No imputation of missing intervention assignment on available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim2$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days:\nwhether or not participant opened app outside of survey or\nactive task completion in the past 80 hours from time T\n(No imputation of missing intervention assignment on available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim4$score.balance.appusage, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days:\nwhether or not participant opened app outside of survey or\nactive task completion in the past 80 hours from time T\n(No imputation of missing intervention assignment on available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim1$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days:\nwhether or not participant completed survey or active tasks yesterday\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim2$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days:\nwhether or not participant completed survey or active tasks yesterday\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim4$score.balance.prevday.outcome, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days:\nwhether or not participant completed survey or active tasks yesterday\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim1$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 21, bg = "grey")
+title(main = list("Aim 1: Balance score among available participant days:\nwhether or not study staff contacted participants in the past 72 hours from time T\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim2$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 2: Balance score among available participant days:\nwhether or not study staff contacted participants in the past 80 hours from time T\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+plot(noimputation.randquality.aim4$score.balance.contact_yes, main = "",
+     xlab = "Study day", 
+     ylab = "",
+     xlim = c(1,29), ylim = c(-1,1),
+     pch = 24, bg = "grey")
+title(main = list("Aim 4: Balance score among available participant days:\nwhether or not study staff contacted participants in the past 80 hours from time T\n(No imputation of missing intervention assignment\non available participant days)", cex = 0.75))
+abline(h = 0, lty = 2)
+
+par(mfrow=c(1,1))
+
+```
+
