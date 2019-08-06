@@ -1,0 +1,67 @@
+---
+title: 'SARA: Results'
+author: "Jamie Yap"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+geometry: margin=1in
+---
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(tidy = TRUE)
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+path.dataforanalysis <- Sys.getenv("path.dataforanalysis") 
+```
+
+# Aim 1
+## Complete Case Analysis
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim1
+drop.criteria.aimX <- NULL
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+
+# Aim 2
+## Complete Case Analysis
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim1
+drop.criteria.aimX <- NULL
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+
+# Aim 4
+## Complete Case Analysis
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim1
+drop.criteria.aimX <- NULL
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+
