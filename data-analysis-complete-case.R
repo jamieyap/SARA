@@ -45,6 +45,10 @@ source(file.path(path.analysis, "primary_and_secondary_analysis.R"))
 #  (dataforanalysis.aimX[,"memegifbug"] == 1)
 
 # Aim 4 -------------------------------
+# Drop study_day 1 and 2: mathematically equivalent to setting availability=0 for these study days
+#dataforanalysis.aim4$availability <- replace(dataforanalysis.aim4$availability,
+#                                             (dataforanalysis.aim4$study_day==1) | (dataforanalysis.aim4$study_day==2) ,
+#                                             0)
 #dataforanalysis.aimX <- dataforanalysis.aim4
 # In data analyses, study_day is zero-indexed
 #dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1

@@ -98,6 +98,10 @@ for(i in 1:length(objects.aimX)){
 ## Complete Case Analysis
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+# Drop study_day 1 and 2: mathematically equivalent to setting availability=0 for these study days
+dataforanalysis.aim4$availability <- replace(dataforanalysis.aim4$availability,
+                                             (dataforanalysis.aim4$study_day==1) | (dataforanalysis.aim4$study_day==2) ,
+                                             0)
 dataforanalysis.aimX <- dataforanalysis.aim4
 # In data analyses, study_day is zero-indexed
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
@@ -116,6 +120,10 @@ for(i in 1:length(objects.aimX)){
 ## Analysis with Multiply Imputed Data
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+# Drop study_day 1 and 2: mathematically equivalent to setting availability=0 for these study days
+dataforanalysis.aim4$availability <- replace(dataforanalysis.aim4$availability,
+                                             (dataforanalysis.aim4$study_day==1) | (dataforanalysis.aim4$study_day==2) ,
+                                             0)
 dataforanalysis.aimX <- dataforanalysis.aim4
 # In data analyses, study_day is zero-indexed
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
