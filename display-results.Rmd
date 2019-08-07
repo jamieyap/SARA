@@ -28,8 +28,28 @@ path.dataforanalysis <- Sys.getenv("path.dataforanalysis")
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
 dataforanalysis.aimX <- dataforanalysis.aim1
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- NULL
+
 source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+## Analysis with Multiply Imputed Data
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim1
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- NULL
+
+source("data-analysis-multiple-imputation.R")
 for(i in 1:length(objects.aimX)){
   print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
   cat("\n\n")
@@ -41,8 +61,14 @@ for(i in 1:length(objects.aimX)){
 ## Complete Case Analysis
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
-dataforanalysis.aimX <- dataforanalysis.aim1
-drop.criteria.aimX <- NULL
+dataforanalysis.aimX <- dataforanalysis.aim2
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
+  (dataforanalysis.aimX[,"memegifbug"] == 1)
+
 source("data-analysis-complete-case.R")
 for(i in 1:length(objects.aimX)){
   print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
@@ -50,18 +76,60 @@ for(i in 1:length(objects.aimX)){
 }
 ```
 
+## Analysis with Multiply Imputed Data
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim2
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
+  (dataforanalysis.aimX[,"memegifbug"] == 1)
+
+source("data-analysis-multiple-imputation.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
 
 # Aim 4
 ## Complete Case Analysis
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
-dataforanalysis.aimX <- dataforanalysis.aim1
-drop.criteria.aimX <- NULL
+dataforanalysis.aimX <- dataforanalysis.aim4
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
+  (dataforanalysis.aimX[,"memegifbug"] == 1)
+
 source("data-analysis-complete-case.R")
 for(i in 1:length(objects.aimX)){
   print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
   cat("\n\n")
 }
 ```
+
+## Analysis with Multiply Imputed Data
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim4 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim4.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim4
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
+  (dataforanalysis.aimX[,"memegifbug"] == 1)
+
+source("data-analysis-multiple-imputation.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
 
 

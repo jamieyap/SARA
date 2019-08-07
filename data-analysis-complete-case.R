@@ -30,18 +30,27 @@ source(file.path(path.analysis, "primary_and_secondary_analysis.R"))
 
 # Aim 1 -------------------------------
 #dataforanalysis.aimX <- dataforanalysis.aim1
+# In data analyses, study_day is zero-indexed
+#dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+#dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 #drop.criteria.aimX <- NULL
 
 # Aim 2 -------------------------------
 #dataforanalysis.aimX <- dataforanalysis.aim2
-#drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 29) | 
-#  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 11) |
+# In data analyses, study_day is zero-indexed
+#dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+#dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+#drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+#  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
 #  (dataforanalysis.aimX[,"memegifbug"] == 1)
 
 # Aim 4 -------------------------------
 #dataforanalysis.aimX <- dataforanalysis.aim4
-#(dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 29) | 
-#  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 11) |
+# In data analyses, study_day is zero-indexed
+#dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+#dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+#drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+#  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
 #  (dataforanalysis.aimX[,"memegifbug"] == 1)
 
 # -----------------------------------------------------------------------------
@@ -53,8 +62,6 @@ dataforanalysis.aimX$day.of.week <- strptime(dataforanalysis.aimX$calendar_date,
 dataforanalysis.aimX$day.of.week <- strftime(dataforanalysis.aimX$day.of.week, format = "%u")  # Monday = 1
 dataforanalysis.aimX$weekend <- ifelse(dataforanalysis.aimX$day.of.week >=6, 1, 0)
 dataforanalysis.aimX$sunday <- ifelse(dataforanalysis.aimX$day.of.week ==7, 1, 0)
-dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day-1  # Subtract 1 from study_day so that it is zero-indexed 
-dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 
 # Data for complete case analysis ---------------------------------------------
 complete.cases.data.aimX <- dataforanalysis.aimX
@@ -402,6 +409,231 @@ row.names(complete.case.exploratory.study_day_squared.aimX) <- c("beta1","beta2"
                                                                  "Intercept","appusage_yes", "isCompleted_yesterday_yes", "contact_yes")
 
 # -----------------------------------------------------------------------------
+# Data analysis: More moderators analysis
+# -----------------------------------------------------------------------------
+
+# all four moderators in one model --------------------------------------------
+complete.case.exploratory.all.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                               control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                               moderator = c("weekend",
+                                                                                             "contact_yes",
+                                                                                             "appusage_yes",
+                                                                                             "isCompleted_yesterday_yes"),
+                                                                               id_var = "username",
+                                                                               day_var = "study_day",
+                                                                               trt_var = "isRandomized",
+                                                                               outcome_var = my_outcome_variable,
+                                                                               avail_var = "availability",
+                                                                               prob_treatment = 1/2,
+                                                                               significance_level = 0.05,
+                                                                               F_test_L = matrix(c(1,0,0,0,0), byrow=TRUE, nrow=1),
+                                                                               F_test_c = NULL) 
+
+complete.case.exploratory.all.aimX <- data.frame(exp = exp(complete.case.exploratory.all.aimX$beta),
+                                                 beta_contrast = complete.case.exploratory.all.aimX$beta,
+                                                 se.beta_contrast = complete.case.exploratory.all.aimX$beta_se,
+                                                 test.stat.beta_contrast = complete.case.exploratory.all.aimX$test_stat_t,
+                                                 p.val = complete.case.exploratory.all.aimX$p_value_t)
+complete.case.exploratory.all.aimX <- round(complete.case.exploratory.all.aimX, digits=3)
+row.names(complete.case.exploratory.all.aimX) <- c("beta1", "beta2", "beta3", "beta4", "beta5")
+
+# all four moderators in one model: R & V -------------------------------------
+complete.case.exploratory.all.R_V.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                   control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                   moderator = c("weekend",
+                                                                                                 "contact_yes",
+                                                                                                 "appusage_yes",
+                                                                                                 "isCompleted_yesterday_yes"),
+                                                                                   id_var = "username",
+                                                                                   day_var = "study_day",
+                                                                                   trt_var = "isRandomized",
+                                                                                   outcome_var = my_outcome_variable,
+                                                                                   avail_var = "availability",
+                                                                                   prob_treatment = 1/2,
+                                                                                   significance_level = 0.05,
+                                                                                   F_test_L = matrix(c(# R & V
+                                                                                     1,1,1,0,0,
+                                                                                     1,1,0,0,0,
+                                                                                     1,0,1,0,0),
+                                                                                     byrow=TRUE, nrow=3), F_test_c = NULL) 
+
+complete.case.exploratory.all.R_V.aimX <- data.frame(exp = exp(complete.case.exploratory.all.R_V.aimX$beta_contrast),
+                                                     beta_contrast = complete.case.exploratory.all.R_V.aimX$beta_contrast,
+                                                     se.beta_contrast = complete.case.exploratory.all.R_V.aimX$se_beta_contrast,
+                                                     test.stat.beta_contrast = complete.case.exploratory.all.R_V.aimX$test_stat_beta_contrast,
+                                                     p.val = complete.case.exploratory.all.R_V.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.R_V.aimX <- round(complete.case.exploratory.all.R_V.aimX, digits=3)
+row.names(complete.case.exploratory.all.R_V.aimX) <- c("R&V: (1,1,1,0,0)","R&V: (1,1,0,0,0)","R&V: (1,0,1,0,0)")
+
+complete.case.exploratory.all.R_V.aimX_01 <- complete.case.exploratory.all.R_V.aimX
+
+complete.case.exploratory.all.R_V.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                   control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                   moderator = c("weekend",
+                                                                                                 "contact_yes",
+                                                                                                 "appusage_yes",
+                                                                                                 "isCompleted_yesterday_yes"),
+                                                                                   id_var = "username",
+                                                                                   day_var = "study_day",
+                                                                                   trt_var = "isRandomized",
+                                                                                   outcome_var = my_outcome_variable,
+                                                                                   avail_var = "availability",
+                                                                                   prob_treatment = 1/2,
+                                                                                   significance_level = 0.05,
+                                                                                   F_test_L = matrix(c(# R & V
+                                                                                     1,1,1,0,1,
+                                                                                     1,1,0,0,1,
+                                                                                     1,0,1,0,1),
+                                                                                     byrow=TRUE, nrow=3), F_test_c = NULL) 
+
+complete.case.exploratory.all.R_V.aimX <- data.frame(exp = exp(complete.case.exploratory.all.R_V.aimX$beta_contrast),
+                                                     beta_contrast = complete.case.exploratory.all.R_V.aimX$beta_contrast,
+                                                     se.beta_contrast = complete.case.exploratory.all.R_V.aimX$se_beta_contrast,
+                                                     test.stat.beta_contrast = complete.case.exploratory.all.R_V.aimX$test_stat_beta_contrast,
+                                                     p.val = complete.case.exploratory.all.R_V.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.R_V.aimX <- round(complete.case.exploratory.all.R_V.aimX, digits=3)
+row.names(complete.case.exploratory.all.R_V.aimX) <- c("R&V: (1,1,1,0,1)","R&V: (1,1,0,0,1)","R&V: (1,0,1,0,1)")
+
+complete.case.exploratory.all.R_V.aimX_02 <- complete.case.exploratory.all.R_V.aimX
+
+complete.case.exploratory.all.R_V.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                   control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                   moderator = c("weekend",
+                                                                                                 "contact_yes",
+                                                                                                 "appusage_yes",
+                                                                                                 "isCompleted_yesterday_yes"),
+                                                                                   id_var = "username",
+                                                                                   day_var = "study_day",
+                                                                                   trt_var = "isRandomized",
+                                                                                   outcome_var = my_outcome_variable,
+                                                                                   avail_var = "availability",
+                                                                                   prob_treatment = 1/2,
+                                                                                   significance_level = 0.05,
+                                                                                   F_test_L = matrix(c(# R & V
+                                                                                     1,1,1,1,0,
+                                                                                     1,1,0,1,0,
+                                                                                     1,0,1,1,0),
+                                                                                     byrow=TRUE, nrow=3), F_test_c = NULL) 
+
+complete.case.exploratory.all.R_V.aimX <- data.frame(exp = exp(complete.case.exploratory.all.R_V.aimX$beta_contrast),
+                                                     beta_contrast = complete.case.exploratory.all.R_V.aimX$beta_contrast,
+                                                     se.beta_contrast = complete.case.exploratory.all.R_V.aimX$se_beta_contrast,
+                                                     test.stat.beta_contrast = complete.case.exploratory.all.R_V.aimX$test_stat_beta_contrast,
+                                                     p.val = complete.case.exploratory.all.R_V.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.R_V.aimX <- round(complete.case.exploratory.all.R_V.aimX, digits=3)
+row.names(complete.case.exploratory.all.R_V.aimX) <- c("R&V: (1,1,1,1,0)","R&V: (1,1,0,1,0)","R&V: (1,0,1,1,0)")
+
+complete.case.exploratory.all.R_V.aimX_03 <- complete.case.exploratory.all.R_V.aimX
+
+# R & NV
+complete.case.exploratory.all.R_NV.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                    control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                    moderator = c("weekend",
+                                                                                                  "contact_yes",
+                                                                                                  "appusage_yes",
+                                                                                                  "isCompleted_yesterday_yes"),
+                                                                                    id_var = "username",
+                                                                                    day_var = "study_day",
+                                                                                    trt_var = "isRandomized",
+                                                                                    outcome_var = my_outcome_variable,
+                                                                                    avail_var = "availability",
+                                                                                    prob_treatment = 1/2,
+                                                                                    significance_level = 0.05,
+                                                                                    F_test_L = matrix(c(# R & NV
+                                                                                      1,1,1,1,1,
+                                                                                      1,1,0,1,1,
+                                                                                      1,0,1,1,1),
+                                                                                      byrow=TRUE, nrow=3), F_test_c = NULL) 
+
+complete.case.exploratory.all.R_NV.aimX <- data.frame(exp = exp(complete.case.exploratory.all.R_NV.aimX$beta_contrast),
+                                                      beta_contrast = complete.case.exploratory.all.R_NV.aimX$beta_contrast,
+                                                      se.beta_contrast = complete.case.exploratory.all.R_NV.aimX$se_beta_contrast,
+                                                      test.stat.beta_contrast = complete.case.exploratory.all.R_NV.aimX$test_stat_beta_contrast,
+                                                      p.val = complete.case.exploratory.all.R_NV.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.R_NV.aimX <- round(complete.case.exploratory.all.R_NV.aimX, digits=3)
+row.names(complete.case.exploratory.all.R_NV.aimX) <- c("R&NV: (1,1,1,1,1)","R&NV: (1,1,0,1,1)","R&NV: (1,0,1,1,1)")
+
+# NR & V
+complete.case.exploratory.all.NR_V.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                    control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                    moderator = c("weekend",
+                                                                                                  "contact_yes",
+                                                                                                  "appusage_yes",
+                                                                                                  "isCompleted_yesterday_yes"),
+                                                                                    id_var = "username",
+                                                                                    day_var = "study_day",
+                                                                                    trt_var = "isRandomized",
+                                                                                    outcome_var = my_outcome_variable,
+                                                                                    avail_var = "availability",
+                                                                                    prob_treatment = 1/2,
+                                                                                    significance_level = 0.05,
+                                                                                    F_test_L = matrix(c(# NR & V
+                                                                                      1,0,0,0,0,
+                                                                                      1,0,0,0,1,
+                                                                                      1,0,0,1,0),
+                                                                                      byrow=TRUE, nrow=3), F_test_c = NULL) 
+
+complete.case.exploratory.all.NR_V.aimX <- data.frame(exp = exp(complete.case.exploratory.all.NR_V.aimX$beta_contrast),
+                                                      beta_contrast = complete.case.exploratory.all.NR_V.aimX$beta_contrast,
+                                                      se.beta_contrast = complete.case.exploratory.all.NR_V.aimX$se_beta_contrast,
+                                                      test.stat.beta_contrast = complete.case.exploratory.all.NR_V.aimX$test_stat_beta_contrast,
+                                                      p.val = complete.case.exploratory.all.NR_V.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.NR_V.aimX <- round(complete.case.exploratory.all.NR_V.aimX, digits=3)
+row.names(complete.case.exploratory.all.NR_V.aimX) <- c("NR&V: (1,0,0,0,0)","NR&V: (1,0,0,0,1)","NR&V: (1,0,0,1,0)")
+
+# NR & NV
+complete.case.exploratory.all.NR_NV.aimX <- SARA_exploratory_analysis_general_F_test(dta = complete.cases.data.aimX, 
+                                                                                     control_var = c("appusage_yes", "isCompleted_yesterday_yes", "contact_yes"),
+                                                                                     moderator = c("weekend",
+                                                                                                   "contact_yes",
+                                                                                                   "appusage_yes",
+                                                                                                   "isCompleted_yesterday_yes"),
+                                                                                     id_var = "username",
+                                                                                     day_var = "study_day",
+                                                                                     trt_var = "isRandomized",
+                                                                                     outcome_var = my_outcome_variable,
+                                                                                     avail_var = "availability",
+                                                                                     prob_treatment = 1/2,
+                                                                                     significance_level = 0.05,
+                                                                                     F_test_L = matrix(c(# NR & NV
+                                                                                       1,0,0,1,1),
+                                                                                       byrow=TRUE, nrow=1), F_test_c = NULL) 
+
+complete.case.exploratory.all.NR_NV.aimX <- data.frame(exp = exp(complete.case.exploratory.all.NR_NV.aimX$beta_contrast),
+                                                       beta_contrast = complete.case.exploratory.all.NR_NV.aimX$beta_contrast,
+                                                       se.beta_contrast = complete.case.exploratory.all.NR_NV.aimX$se_beta_contrast,
+                                                       test.stat.beta_contrast = complete.case.exploratory.all.NR_NV.aimX$test_stat_beta_contrast,
+                                                       p.val = complete.case.exploratory.all.NR_NV.aimX$p_value_beta_contrast)
+
+complete.case.exploratory.all.NR_NV.aimX <- round(complete.case.exploratory.all.NR_NV.aimX, digits=3)
+row.names(complete.case.exploratory.all.NR_NV.aimX) <- c("NR&NV: (1,0,0,1,1)")
+
+
+# combine all results
+
+row.names(complete.case.exploratory.all.R_V.aimX_01) <- substring(row.names(complete.case.exploratory.all.R_V.aimX_01), 6)
+row.names(complete.case.exploratory.all.R_V.aimX_02) <- substring(row.names(complete.case.exploratory.all.R_V.aimX_02), 6)
+row.names(complete.case.exploratory.all.R_V.aimX_03) <- substring(row.names(complete.case.exploratory.all.R_V.aimX_03), 6)
+row.names(complete.case.exploratory.all.R_NV.aimX) <- substring(row.names(complete.case.exploratory.all.R_NV.aimX), 7)
+row.names(complete.case.exploratory.all.NR_V.aimX) <- substring(row.names(complete.case.exploratory.all.NR_V.aimX), 7)
+row.names(complete.case.exploratory.all.NR_NV.aimX) <- substring(row.names(complete.case.exploratory.all.NR_NV.aimX), 8)
+
+complete.case.exploratory.all.aimX <- rbind(complete.case.exploratory.all.aimX,
+                                            complete.case.exploratory.all.R_V.aimX_01,
+                                            complete.case.exploratory.all.R_V.aimX_02,
+                                            complete.case.exploratory.all.R_V.aimX_03,
+                                            complete.case.exploratory.all.R_NV.aimX,
+                                            complete.case.exploratory.all.NR_V.aimX,
+                                            complete.case.exploratory.all.NR_NV.aimX)
+
+
+
+# -----------------------------------------------------------------------------
 # Save all objects into a list
 # -----------------------------------------------------------------------------
 
@@ -412,8 +644,8 @@ results.names <- c("complete.case.main.aimX",
                    "complete.case.exploratory.female.aimX",
                    "complete.case.exploratory.study_day.aimX",
                    "complete.case.exploratory.study_day_squared.aimX",
-                   "complete.case.exploratory.weekend.aimX"
-                   )
+                   "complete.case.exploratory.weekend.aimX",
+                   "complete.case.exploratory.all.aimX")
 objects.aimX <- lapply(results.names, function(this.string){
   return(get(this.string))
 })
@@ -427,5 +659,6 @@ table.labels <- c("Complete Case Analysis: Main Analysis",
                   "Complete Case Analysis: female=1 vs. female=0",
                   "Complete Case Analysis: study_day",
                   "Complete Case Analysis: study_day_squared",
-                  "Complete Case Analysis: weekend=1 vs. weekend=0"
-                  )
+                  "Complete Case Analysis: weekend=1 vs. weekend=0",
+                  "Complete Case Analysis: Four Moderators in One Model")
+
