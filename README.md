@@ -1,5 +1,3 @@
-pandoc --number-sections < README.md > README.html
-
 # Substance Abuse Research Assistant: Curation and Analysis of Micro-Randomized Trial Data
 
 ## 1. About Substance Abuse Research Assistant (SARA)
