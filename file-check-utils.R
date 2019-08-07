@@ -54,3 +54,22 @@ PrintKableTable <- function(output.SummariseAll, mycaption, mygenfootnote = NULL
     footnote(general = c(mygenfootnote), 
              threeparttable = TRUE)
 }
+
+GetCommonFiles <- function(path1, path2){
+  # Function lists down common files in path1 and path2
+  # based on their file names
+  
+  files.path1 <- SimpleReadAll(path1)
+  files.path2 <- SimpleReadAll(path2)
+  common.file.names <- intersect(names(files.path1), names(files.path2))
+  return(list(from.path1 = files.path1[common.file.names], from.path2 = files.path2[common.file.names]))
+}
+
+CheckCommonFiles <- function(path1, path2){
+  # Function checks whether files that are common to path1 and path2
+  # based on file name are identical (i.e. they contain the same data)
+  list.common.files <- GetCommonFiles(path1, path2)
+  is.identical <- identical(list.common.files$from.path1, list.common.files$from.path2)
+  return(is.identical)
+}
+
