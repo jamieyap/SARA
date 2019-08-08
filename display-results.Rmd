@@ -23,6 +23,67 @@ library(kableExtra)
 path.dataforanalysis <- Sys.getenv("path.dataforanalysis") 
 ```
 
+# Background
+## Main Analysis
+Hypotheses corresponding to each aim are:
+
+* Aim 1: *Offering (vs. not offering) an inspirational quote increases the likelihood to fully complete current day's survey and/or active tasks. This hypothesis is directional; our goal is to increase survey and/or active task completion.* This corresponds to testing $H_0: \beta \leq 0$ vs. $H_1: \beta > 0$ where $\beta$ is the marginal treatment effect on the log scale.
+
+* Aim 2: *Offering positive reinforcement in the form of a meme (vs. not offering meme) following survey completion increases the likelihood to fully complete next day's survey and/or active tasks. This hypothesis is directional; our goal is to increase survey and/or active task completion.* This corresponds to testing $H_0: \beta \leq 0$ vs. $H_1: \beta > 0$ where $\beta$ is the marginal treatment effect on the log scale.
+
+* Aim 4: *Offering life insights (vs. not offering life insights) following active task completion increases the likelihood to fully complete next day's survey and/or active tasks. This hypothesis is directional; our goal is to increase survey and/or active task completion.* This corresponds to testing $H_0: \beta \leq 0$ vs. $H_1: \beta > 0$ where $\beta$ is the marginal treatment effect on the log scale.
+
+In main analysis, we perform a one-sided test with $\alpha = 0.025$ and the following control covariates: 
+
+* appusage_yes 
+* isCompleted_yesterday_yes
+* contact_yes
+
+## Analysis with Moderators
+
+We conduct exploratory analysis on the moderated effect of offering vs. not offering 4PM notification. We use the same set of participant days as in Main Aim 1 Analysis for this purpose. The moderated treatment effect on the log scale is modeled as $\beta_1 + \beta_2X$ where moderators $X$ considered were:
+
+* female: 1 if individual is female, 0 if individual is male
+* weekend: 1 if day is Saturday or Sunday, 0 if day is between Monday to Friday
+* appusage_yes
+* isCompleted_yesterday_yes
+* contact_yes 
+* study_day
+
+and $\beta_1 + \beta_2X + \beta_3X^2$ where moderators $X$ considered were:
+
+* study_day
+
+In both models above, we test the hypothesis $H_0: c\beta = 0$ vs. $H_1: c\beta \neq 0$ where $\beta=(\beta_1, \beta_2)$ or $\beta=(\beta_1, \beta_2, \beta_3)$. We perform a two-sided test and use $\alpha = 0.05$ and the use same set of control covariates in primary analysis:
+
+* appusage_yes 
+* isCompleted_yesterday_yes
+* contact_yes
+
+Analyses were also conducted to examine the moderated effect of offering a meme vs. not offering a meme and the moderated of offering a life insight vs. not offering a life insight.
+
+## More Analysis with Moderators
+
+We conduct additional exploratory analysis on the moderated effect of offering vs. not offering 4PM notification when the moderated treatment effect on the log scale is modeled as $\beta_1 + \beta_2X_1 + \beta_3X_2 + \beta_4X_3 + \beta_5X_4$ where
+
+* $X_1=$ weekend
+* $X_2=$ contact_yes 
+* $X_3=$ appusage_yes
+* $X_4=$ isCompleted_yesterday_yes
+
+We test the hypothesis $H_0: c\beta = 0$ vs. $H_1: c\beta \neq 0$ where $\beta=(\beta_1, \beta_2, \beta_3, \beta_4, \beta_5)$ and $c$ is some vector of real numbers. We perform a two-sided test and use $\alpha = 0.05$ and the use same set of control covariates in primary analysi:
+
+* appusage_yes 
+* isCompleted_yesterday_yes
+* contact_yes
+
+Analyses were also conducted to examine the moderated effect of offering a meme vs. not offering a meme and the moderated of offering a life insight vs. not offering a life insight.
+
+
+## Analyses with Complete Case Data vs. Multiply Imputed Data
+
+Main analyses and exploratory analyses were performed using complete case data and multiply imputed data. **Analyses with Complete Case Data.** Analysis with complete case data involved omitting participant days with missing intervention assignment from the data analysis. **Analyses with Multiply Imputed Data.** 10 imputed datasets were generated where in each imputed dataset, missing intervention assignment among available participant days were imputed by drawing from a $Bernoulli\left(\frac{1}{2}\right)$ distribution. Estimates of model parameters and standard errors were obtained using each imputed dataset and then pooled using the usual rules for combining inferences for multiple imputation (Little & Rubin, 1987).
+
 # Aim 1
 ## Complete Case Analysis
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
@@ -140,4 +201,6 @@ for(i in 1:length(objects.aimX)){
 ```
 
 
+# References
 
+1. Little RJA, Rubin DB. Statistical Analysis with Missing Data. J Wiley & Sons: New York, NY, USA, 1987.

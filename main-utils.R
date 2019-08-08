@@ -15,13 +15,16 @@ ImputeInterventionAssignment <- function(dataforanalysis.aimX, use.this.seed = 5
   return(dataforanalysis.aimX)
 }
 
-PoolEstimatesMI <- function(inputs.beta, inputs.stderr, n, p, q, m){
+PoolEstimatesMI <- function(inputs.beta, inputs.stderr, n, p, q, m, p.val.one.sided = FALSE){
   # inputs.beta = estimates of beta and alpha from each imputed dataset; this is of length m
   # inputs.stderr = estimates of the standard error of betahat and alphahat from each imputed dataset; this is of length m
   # n = number of participants
   # p = number of beta parameters (including intercept)
   # q = number of alpha parameters (including intercept)
   # m = number of imputed datasets
+  # p.value.one.sided whether reported p-value corresponding to estimates of 
+  # treatment effect corresponds to one-sided or two-sided test; reported 
+  # p-value corresponding to estimates of control covariates are always two-sided
   
   pooled.beta <- rowMeans(inputs.beta)
   W <- rowMeans(inputs.stderr^2)
@@ -29,7 +32,15 @@ PoolEstimatesMI <- function(inputs.beta, inputs.stderr, n, p, q, m){
   pooled.var.beta <- W + (1 + 1/m)*B
   pooled.se.beta <- sqrt(pooled.var.beta)
   test.stat <- pooled.beta/pooled.se.beta
-  p.val <- 2 * pt(abs(test.stat), df = n - p - q, lower.tail = FALSE)
+  
+  if(p.val.one.sided == FALSE){
+    p.val <- 2 * pt(abs(test.stat), df = n - p - q, lower.tail = FALSE)
+  }else{ # p.val.one.sided  == TRUE
+    # Calculate p-value for one-sided test
+    p.val <- rep(NA, p+q)
+    p.val[1:p] <- pt((test.stat[1:p]), df = n - p - q, lower.tail = FALSE)
+    p.val[(p+1):(p+q)] <- 2 * pt(abs(test.stat[(p+1):(p+q)]), df = n - p - q, lower.tail = FALSE)
+  }
   
   pooled.exp.beta <- rowMeans(exp(inputs.beta))
   pooled.results <- list(pooled.exp.beta=pooled.exp.beta,

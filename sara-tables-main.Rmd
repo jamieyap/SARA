@@ -67,6 +67,9 @@ map.long.aim2 <- DropAll(LongMap(map.wide), participant.days.to.exclude)
 map.long.aim2 <- map.long.aim2[!(map.long.aim2$study_day==29),] # Exclude very last day
 map.long.aim2 <- map.long.aim2[!(map.long.aim2$username==this.participant.withdrew & map.long.aim2$study_day==11),] # Exclude last day for this.participant.withdrew
 map.long.aim2 <- merge(map.long.aim2, dataforanalysis.aim2[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+
+sensitivity.map.long.aim2 <- map.long.aim2
+
 map.long.aim2 <- map.long.aim2[map.long.aim2$memegifbug==0,] # Only include participants who were not affected by bug
 map.long.aim2 <- map.long.aim2[, colnames(map.long.aim2) %in% c("username", "study_day", "calendar_date")]
 dataforanalysis.aim2 <- dataforanalysis.aim2[dataforanalysis.aim2$memegifbug == 0,]  # Only include participants who were not affected by bug
@@ -81,21 +84,12 @@ map.long.aim4 <- map.long.aim4[!(map.long.aim4$study_day==29),] # Exclude very l
 map.long.aim4 <- map.long.aim4[!(map.long.aim4$username==this.participant.withdrew & map.long.aim4$study_day==11),] # Exclude last day for this.participant.withdrew
 map.long.aim4 <- map.long.aim4[(map.long.aim4$study_day>=3),] # Exclude day 1 and 2
 map.long.aim4 <- merge(map.long.aim4, dataforanalysis.aim4[, c("username","calendar_date","memegifbug")], all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date"))
+
+sensitivity.map.long.aim4 <- map.long.aim4
+
 map.long.aim4 <- map.long.aim4[map.long.aim4$memegifbug==0,] # Only include participants who were not affected by bug
 map.long.aim4 <- map.long.aim4[, colnames(map.long.aim4) %in% c("username", "study_day", "calendar_date")]
 ```
-
-
-```{r, echo = FALSE}
-dat.plot.index.aim1 <- data.frame(username = unique(dataforanalysis.aim1$username), plotindex = 1:length(unique(dataforanalysis.aim1$username)))
-dat.plot.index.aim2 <- data.frame(username = unique(dataforanalysis.aim2$username), plotindex = 1:length(unique(dataforanalysis.aim2$username)))
-dat.plot.index.aim4 <- data.frame(username = unique(dataforanalysis.aim4$username), plotindex = 1:length(unique(dataforanalysis.aim4$username)))
-
-dataforanalysis.aim1 <- merge(dataforanalysis.aim1, dat.plot.index.aim1, by = "username", all.x = TRUE, all.y = TRUE)
-dataforanalysis.aim2 <- merge(dataforanalysis.aim2, dat.plot.index.aim2, by = "username", all.x = TRUE, all.y = TRUE)
-dataforanalysis.aim4 <- merge(dataforanalysis.aim4, dat.plot.index.aim4, by = "username", all.x = TRUE, all.y = TRUE)
-```
-
 
 ```{r, echo = FALSE}
 # Perform imputation on missing intervention assignment
@@ -124,6 +118,38 @@ kable(sara_background, format = "latex",
   column_spec(6, width = "25em")
 ```
 
+
+\newpage
+
+```{r, echo = FALSE}
+issue_01 <- read.csv(file.path(path.aim2.availability, "issue_01.csv"), header = TRUE)
+issue_01$calendar_date <- strptime(issue_01$calendar_date, format = "%m/%d/%Y", tz = "EST5EDT")
+issue_01$calendar_date <- strftime(issue_01$calendar_date, format = "%m/%d/%Y", tz = "EST5EDT")
+issue_01 <- merge(issue_01, sensitivity.map.long.aim2, by = c("username", "calendar_date"), all.x = FALSE, all.y=FALSE)
+this.tbl <- data.frame(nparticipants = length(unique(issue_01$username)), nparticipantdays = nrow(issue_01))
+kable(this.tbl,
+      booktabs = TRUE, align = c('c', 'c'),
+      col.names = c("No. Participants", "No. Participant Days"),
+      caption = "Issue 01: Total Participant days impacted by bug in days 1-28 (Aim 2)") %>%
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position"))
+```
+
+
+```{r, echo = FALSE}
+issue_01 <- read.csv(file.path(path.aim4.availability, "issue_01.csv"), header = TRUE)
+issue_01$calendar_date <- strptime(issue_01$calendar_date, format = "%m/%d/%Y", tz = "EST5EDT")
+issue_01$calendar_date <- strftime(issue_01$calendar_date, format = "%m/%d/%Y", tz = "EST5EDT")
+issue_01 <- merge(issue_01, sensitivity.map.long.aim4, by = c("username", "calendar_date"), all.x = FALSE, all.y=FALSE)
+this.tbl <- data.frame(nparticipants = length(unique(issue_01$username)), nparticipantdays = nrow(issue_01))
+kable(this.tbl,
+      booktabs = TRUE, align = c('c', 'c'),
+      col.names = c("No. Participants", "No. Participant Days"),
+      caption = "Issue 01: Total Participant days impacted by bug in days 3-28 (Aim 4)") %>%
+  kable_styling(full_width = FALSE, latex_options = c("HOLD_position"))
+```
+
+
+In Sections 1-3, summary statistics on availability and missing data were calculated after excluding data corresponding to all participants who experienced the bug impacting the delivery of memes (issue 1).
 
 # Availability
 

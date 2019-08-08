@@ -113,7 +113,8 @@ if(is.null(drop.criteria.aimX)){
                                       n = n,
                                       p = 1,
                                       q = 4,
-                                      m = m)
+                                      m = m,
+                                      p.val.one.sided = TRUE)
   est.mi.main.aimX <- do.call(cbind, est.mi.main.aimX)
   row.names(est.mi.main.aimX) <- c("beta","Intercept","appusage_yes","isCompleted_yesterday_yes","contact_yes")
   
@@ -143,7 +144,8 @@ if(is.null(drop.criteria.aimX)){
                                       n = n,
                                       p = 1,
                                       q = 4,
-                                      m = m)
+                                      m = m,
+                                      p.val.one.sided = TRUE)
   est.mi.main.aimX <- do.call(cbind, est.mi.main.aimX)
   
   row.names(est.mi.main.aimX) <- c("beta","Intercept","appusage_yes", "isCompleted_yesterday_yes", "contact_yes")

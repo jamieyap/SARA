@@ -95,7 +95,17 @@ if(is.null(drop.criteria.aimX)){
   complete.case.main.aimX.est <- c(complete.case.main.aimX$beta, complete.case.main.aimX$alpha)
   complete.case.main.aimX.se <- c(complete.case.main.aimX$beta_se, complete.case.main.aimX$alpha_se)
   complete.case.main.aimX.teststat <- complete.case.main.aimX.est/complete.case.main.aimX.se
-  complete.case.main.aimX.p.val <- 2 * pt(abs(complete.case.main.aimX.teststat), df = n - p - q, lower.tail = FALSE)
+  
+  # Uncomment next line if one wishes to calculate pvalue corresponding to a two-sided test
+  #complete.case.main.aimX.p.val <- 2 * pt(abs(complete.case.main.aimX.teststat), df = n - p - q, lower.tail = FALSE)
+  
+  # Note that primary_and_secondary_analysis.R calculates p-value for two-sided test
+  # in SARA_primary_hypothesis_1(). However, here, we calculate p-value for a one-sided test
+  complete.case.main.aimX.p.val <- rep(NA, p+q)
+  complete.case.main.aimX.p.val[1:p] <- pt((complete.case.main.aimX.teststat[1:p]), df = n - p - q, lower.tail = FALSE)
+  # Calculate two sided p-value for control covariates
+  complete.case.main.aimX.p.val[(p+1):(p+q)] <- 2 * pt(abs(complete.case.main.aimX.teststat[(p+1):(p+q)]), df = n - p - q, lower.tail = FALSE)
+  
   
   complete.case.main.aimX <- data.frame(exp = exp(complete.case.main.aimX.est),
                                         beta = complete.case.main.aimX.est,
@@ -126,16 +136,27 @@ if(is.null(drop.criteria.aimX)){
   complete.case.main.aimX.est <- c(complete.case.main.aimX$beta, complete.case.main.aimX$alpha)
   complete.case.main.aimX.se <- c(complete.case.main.aimX$beta_se, complete.case.main.aimX$alpha_se)
   complete.case.main.aimX.teststat <- complete.case.main.aimX.est/complete.case.main.aimX.se
-  complete.case.main.aimX.p.val <- 2 * pt(abs(complete.case.main.aimX.teststat), df = n - p - q, lower.tail = FALSE)
+  
+  # Uncomment next line if one wishes to calculate pvalue corresponding to a two-sided test
+  #complete.case.main.aimX.p.val <- 2 * pt(abs(complete.case.main.aimX.teststat), df = n - p - q, lower.tail = FALSE)
+  
+  # Note that primary_and_secondary_analysis.R calculates p-value for two-sided test
+  # in SARA_primary_hypothesis_1(). However, here, we calculate p-value for a one-sided test
+  complete.case.main.aimX.p.val <- rep(NA, p+q)
+  complete.case.main.aimX.p.val[1:p] <- pt((complete.case.main.aimX.teststat[1:p]), df = n - p - q, lower.tail = FALSE)
+  # Calculate two sided p-value for control covariates
+  complete.case.main.aimX.p.val[(p+1):(p+q)] <- 2 * pt(abs(complete.case.main.aimX.teststat[(p+1):(p+q)]), df = n - p - q, lower.tail = FALSE)
+  
   
   complete.case.main.aimX <- data.frame(exp = exp(complete.case.main.aimX.est),
                                         beta = complete.case.main.aimX.est,
                                         se.beta = complete.case.main.aimX.se,
                                         test.stat = complete.case.main.aimX.teststat,
                                         p.val = complete.case.main.aimX.p.val)
+  
   complete.case.main.aimX <- round(complete.case.main.aimX, digits=3)
   #row.names(complete.case.main.aimX) <- c("beta","alpha1","alpha2","alpha3","alpha4")
-  row.names(complete.case.main.aimX) <- c("beta","Intercept","appusage_yes", "isCompleted_yesterday_yes", "contact_yes")
+  row.names(complete.case.main.aimX) <- c("beta","Intercept","appusage_yes","isCompleted_yesterday_yes","contact_yes")
 }
 
 # -----------------------------------------------------------------------------
