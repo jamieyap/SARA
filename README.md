@@ -1,12 +1,16 @@
 # Substance Abuse Research Assistant: Curation and Analysis of Micro-Randomized Trial Data
 
-## 1. About Substance Abuse Research Assistant (SARA)
+## 0. About Substance Abuse Research Assistant (SARA)
 
 "SARA is a mobile application to increase or sustain engagement of substance data collection overtime." (Rabbi and others, 2018) A micro-randomized trial (MRT) was conducted to assess the effectiveness of employing various engagement strategies integrated with the mobile application.
 
-## 2. About This Repository
+## 1. About This Repository
 
 This repository contains code for performing curation and analysis of SARA MRT data and documentation. Files corresponding to particular stages of the project are placed under the relevant header.
+
+## 2. Before Proceeding
+
+Questions about the material in this repository can be directed at https://github.com/jamieyap/SARA/issues by submitting a `New issue`.
 
 ## 3. Documentation
 
