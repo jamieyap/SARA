@@ -21,6 +21,7 @@ File | Description
 [display-results.pdf](https://github.com/jamieyap/SARA/blob/master/display-results.pdf) | Displays estimates of marginal and moderated causal effects
 [check-randomization.pdf](https://github.com/jamieyap/SARA/blob/master/check-randomization.pdf) | Describes checks on quality of randomization of the SARA MRT
 [sara-tables-main.pdf](https://github.com/jamieyap/SARA/blob/master/sara-tables-main.pdf) | Displays summary statistics on availability and missing data
+[display-sensitivity.pdf](https://github.com/jamieyap/SARA/blob/master/display-results.pdf) | Displays estimates of marginal and moderated causal effects in sensitivity analysis
 
 ### 3.2 More Details
 
@@ -57,6 +58,7 @@ File | Description
 [data-analysis-multiple-imputation.R](https://github.com/jamieyap/SARA/blob/master/data-analysis-multiple-imputation.R) | Specify marginal and moderated causal effects to estimate using multiply imputed data
 [primary_and_secondary_analysis.R](https://github.com/jamieyap/SARA/blob/master/primary_and_secondary_analysis.R) | Estimate moderated treatment effect and their standard errors
 [display-results.Rmd](https://github.com/jamieyap/SARA/blob/master/display-results.Rmd) | Display results from analysis using `data-analysis-complete-case.R` and  `data-analysis-multiple-imputation.R` in [display-results.pdf](https://github.com/jamieyap/SARA/blob/master/display-results.pdf) 
+[display-sensitivity.Rmd](https://github.com/jamieyap/SARA/blob/master/display-sensitivity.Rmd) | Display results from analysis using `data-analysis-complete-case.R` in [display-sensitivity.pdf](https://github.com/jamieyap/SARA/blob/master/display-sensitivity.pdf) 
 
 ### 3.3 Other
 File | Description

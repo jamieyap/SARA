@@ -93,6 +93,7 @@ dataforanalysis.aimX <- dataforanalysis.aim1
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- NULL
+my_outcome_variable <- "isCompleted"
 
 source("data-analysis-complete-case.R")
 for(i in 1:length(objects.aimX)){
@@ -109,6 +110,7 @@ dataforanalysis.aimX <- dataforanalysis.aim1
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- NULL
+my_outcome_variable <- "isCompleted"
 
 source("data-analysis-multiple-imputation.R")
 for(i in 1:length(objects.aimX)){
@@ -129,6 +131,7 @@ dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
   (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
   (dataforanalysis.aimX[,"memegifbug"] == 1)
+my_outcome_variable <- "isCompleted_tomorrow"
 
 source("data-analysis-complete-case.R")
 for(i in 1:length(objects.aimX)){
@@ -147,6 +150,7 @@ dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
   (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
   (dataforanalysis.aimX[,"memegifbug"] == 1)
+my_outcome_variable <- "isCompleted_tomorrow"
 
 source("data-analysis-multiple-imputation.R")
 for(i in 1:length(objects.aimX)){
@@ -164,6 +168,8 @@ dataforanalysis.aim4$availability <- replace(dataforanalysis.aim4$availability,
                                              (dataforanalysis.aim4$study_day==1) | (dataforanalysis.aim4$study_day==2) ,
                                              0)
 dataforanalysis.aimX <- dataforanalysis.aim4
+my_outcome_variable <- "isCompleted_tomorrow"
+
 # In data analyses, study_day is zero-indexed
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
@@ -186,6 +192,8 @@ dataforanalysis.aim4$availability <- replace(dataforanalysis.aim4$availability,
                                              (dataforanalysis.aim4$study_day==1) | (dataforanalysis.aim4$study_day==2) ,
                                              0)
 dataforanalysis.aimX <- dataforanalysis.aim4
+my_outcome_variable <- "isCompleted_tomorrow"
+
 # In data analyses, study_day is zero-indexed
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2

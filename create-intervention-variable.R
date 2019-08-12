@@ -93,10 +93,22 @@ subset.memegif.data <- merge(subset.memegif.data, availability.memegif.data, all
 # the study in user.memegifbug
 # -----------------------------------------------------------------------------
 aim2.availability.commondays <- GetCommonPersonDays(path.aim2.availability, map.long)
+
+# Participants who were affected by bug impacting delivery of memes
 user.memegifbug <- as.character(unique(aim2.availability.commondays[aim2.availability.commondays$issue_01.csv.in.df==1,"issue_00.csv.username"]))
 
-# Create variable to indicate which participant days impacted by "big bug"
+# Participant days affected by bug impacting delivery of memes
+participantday.memegifbug <- aim2.availability.commondays[, c("issue_00.csv.username","issue_00.csv.calendar_date","issue_01.csv.in.df")]
+colnames(participantday.memegifbug) <- c("username","calendar_date","participantday.memegifbug")
+participantday.memegifbug <- participantday.memegifbug[which(participantday.memegifbug$participantday.memegifbug==1),]
+
+# Create variable to indicate which participants were impacted by "big bug"
 subset.memegif.data$memegifbug <- ifelse(subset.memegif.data$username %in% user.memegifbug, 1, 0)
+
+# Create variable to identify specific participant days impacted by "big bug"
+subset.memegif.data <- merge(subset.memegif.data, participantday.memegifbug, by = c("username","calendar_date"), all.x=TRUE, all.y=FALSE)
+subset.memegif.data$participantday.memegifbug <- replace(subset.memegif.data$participantday.memegifbug, is.na(subset.memegif.data$participantday.memegifbug), 0)
+
 # Drop unnecessary columns
 # the column unix_ts should not be dropped since create-appusage-variable.R uses it
 subset.memegif.data <- subset.memegif.data[, !(colnames(subset.memegif.data) %in% c("readable_ts"))] 
@@ -120,8 +132,11 @@ availability.lifeinsight.data$availability <- replace(availability.lifeinsight.d
 availability.lifeinsight.data <- availability.lifeinsight.data[,!(colnames(availability.lifeinsight.data) %in% c("study_day","in.df"))]
 subset.lifeinsight.data <- merge(subset.lifeinsight.data, availability.lifeinsight.data, all.x=TRUE, all.y=FALSE, by = c("username", "calendar_date"))
 
-# Create variable to indicate which participant days impacted by "big bug" in Aim 2 for Aim 4 analysis
+# Create variable to indicate which participants impacted by "big bug" in Aim 2 for Aim 4 analysis
 subset.lifeinsight.data$memegifbug <- ifelse(subset.lifeinsight.data$username %in% user.memegifbug, 1, 0)
+# Create variable to identify specific participant days impacted by "big bug"
+subset.lifeinsight.data <- merge(subset.lifeinsight.data, participantday.memegifbug, by = c("username","calendar_date"), all.x=TRUE, all.y=FALSE)
+subset.lifeinsight.data$participantday.memegifbug <- replace(subset.lifeinsight.data$participantday.memegifbug, is.na(subset.lifeinsight.data$participantday.memegifbug), 0)
 
 # Save datasets created -------------------------------------------------------
 subset.4PM.data <- merge(subset.4PM.data, dailysurveycompletion.timestamps, all.x = TRUE, all.y = FALSE, by = c("username", "calendar_date")) 

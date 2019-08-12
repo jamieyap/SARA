@@ -1,0 +1,85 @@
+---
+title: "SARA: Sensitivity Analysis"
+author: "Jamie Yap"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+geometry: margin=1in
+output: 
+  pdf_document:
+    number_sections: TRUE
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(tidy = TRUE)
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+```{r, echo = FALSE, warning = FALSE}
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+path.dataforanalysis <- Sys.getenv("path.dataforanalysis") 
+this.participant.withdrew <- Sys.getenv("this.participant.withdrew")
+```
+
+# Aim 1: Sensitivity Analysis with Complete Case Data
+In this sensitivity analysis, we exclude the last study day for all participants.
+
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim1 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim1.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim1
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10)
+my_outcome_variable <- "isCompleted"
+
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+
+# Aim 2: Sensitivity Analysis \#1 with Complete Case Data
+In this analysis, we use only those participant days unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last study day for all participants.
+
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim2
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10)
+dataforanalysis.aimX$availability <- replace(dataforanalysis.aimX$availability,dataforanalysis.aimX[,"participantday.memegifbug"] == 1,0)
+my_outcome_variable <- "isCompleted_tomorrow"
+
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```
+
+# Aim 2: Sensitivity Analysis \#2 with Complete Case Data
+In this analysis, we use only those 50 participants unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last study day for all 50 participants.
+
+```{r, echo = FALSE, warning = FALSE, results='asis'}
+dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+dataforanalysis.aimX <- dataforanalysis.aim2
+# In data analyses, study_day is zero-indexed
+dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
+dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
+drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] >= 27) | 
+  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] >= 9) |
+  (dataforanalysis.aimX[,"memegifbug"] == 1)
+my_outcome_variable <- "isCompleted_tomorrow"
+
+source("data-analysis-complete-case.R")
+for(i in 1:length(objects.aimX)){
+  print(kable(objects.aimX[[i]], "latex", caption=cat("Table",i,":", table.labels[i]), booktabs = TRUE) %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+  cat("\n\n")
+}
+```

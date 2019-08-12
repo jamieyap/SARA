@@ -35,6 +35,7 @@ source(file.path(path.analysis, "primary_and_secondary_analysis.R"))
 #dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 #dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 #drop.criteria.aimX <- NULL
+# my_outcome_variable <- "isCompleted"
 
 # Aim 2 -------------------------------
 #dataforanalysis.aimX <- dataforanalysis.aim2
@@ -44,6 +45,7 @@ source(file.path(path.analysis, "primary_and_secondary_analysis.R"))
 #drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
 #  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
 #  (dataforanalysis.aimX[,"memegifbug"] == 1)
+# my_outcome_variable <- "isCompleted_tomorrow"
 
 # Aim 4 -------------------------------
 # Drop study_day 1 and 2: mathematically equivalent to setting availability=0 for these study days
@@ -57,6 +59,7 @@ source(file.path(path.analysis, "primary_and_secondary_analysis.R"))
 #drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
 #  (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10) |
 #  (dataforanalysis.aimX[,"memegifbug"] == 1)
+# my_outcome_variable <- "isCompleted_tomorrow"
 
 # -----------------------------------------------------------------------------
 # Create new time variables, create data for complete case analysis and for
@@ -89,7 +92,7 @@ n <- length(unique(dataforanalysis.aimX$username))
 # Data analysis: main analyses
 # -----------------------------------------------------------------------------
 
-if(is.null(drop.criteria.aimX)){
+if(my_outcome_variable == "isCompleted"){
   # Aim 1 or Aim 3
   mi.main.aimX <- lapply(mi.data.aimX, FUN = function(this.imputed.data){
     main.analysis.aimX <- SARA_primary_hypothesis_1(dta = this.imputed.data, 
@@ -118,7 +121,7 @@ if(is.null(drop.criteria.aimX)){
   est.mi.main.aimX <- do.call(cbind, est.mi.main.aimX)
   row.names(est.mi.main.aimX) <- c("beta","Intercept","appusage_yes","isCompleted_yesterday_yes","contact_yes")
   
-}else{ 
+}else if(my_outcome_variable == "isCompleted_tomorrow"){ 
   # !is.null(drop.criteria.aimX)
   # Aim 2 or Aim 4
   mi.main.aimX <- lapply(mi.data.aimX, FUN = function(this.imputed.data){
@@ -150,6 +153,8 @@ if(is.null(drop.criteria.aimX)){
   
   row.names(est.mi.main.aimX) <- c("beta","Intercept","appusage_yes", "isCompleted_yesterday_yes", "contact_yes")
   
+}else{
+  print("Please enter a valid outcome variable.")
 }
 
 # -----------------------------------------------------------------------------
@@ -158,18 +163,16 @@ if(is.null(drop.criteria.aimX)){
 
 # Obtain subset of data if drop.criteria.aimX is provided
 if(is.null(drop.criteria.aimX)){
-  # Aim 1 or Aim 3
-  my_outcome_variable <- "isCompleted"
+  # Main analysis Aim 1 or Aim 3
+  mi.data.aimX <- mi.data.aimX
 }else{
   # !is.null(drop.criteria.aimX)
-  # Aim 2 or Aim 4
+  # Main analysis Aim 2 or Aim 4
   
   mi.data.aimX <- lapply(mi.data.aimX, FUN = function(dat){
     dat <- dat[!drop.criteria.aimX,]
     return(dat[order(dat$username, dat$study_day),])
   })
-  
-  my_outcome_variable <- "isCompleted_tomorrow"
 }
 
 # -----------------------------------------------------------------------------
