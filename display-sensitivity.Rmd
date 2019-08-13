@@ -43,17 +43,20 @@ for(i in 1:length(objects.aimX)){
 
 
 # Aim 2: Sensitivity Analysis \#1 with Complete Case Data
-In this analysis, we use only those participant days unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last study day for all participants.
+In this analysis, we do not exclude all of a participant's observations if they were impacted by the bug affecting the delivery of memes for at least one day. Instead, we use only those participant days unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last study day for all participants.
 
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
+# Re-define availability variable for the purpose of sensitivity analysis
+dataforanalysis.aim2$availability <- ifelse((dataforanalysis.aim2[,"daily_survey_isCompleted"] == 0)|
+                                              (dataforanalysis.aim2[,"participantday.memegifbug"] == 1),
+                                            0,1)
 dataforanalysis.aimX <- dataforanalysis.aim2
 # In data analyses, study_day is zero-indexed
 dataforanalysis.aimX$study_day <- dataforanalysis.aimX$study_day - 1
 dataforanalysis.aimX$study_day_squared <- (dataforanalysis.aimX$study_day)^2
 drop.criteria.aimX <- (dataforanalysis.aimX[,"username"] != this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 28) | 
   (dataforanalysis.aimX[,"username"] == this.participant.withdrew & dataforanalysis.aimX[,"study_day"] == 10)
-dataforanalysis.aimX$availability <- replace(dataforanalysis.aimX$availability,dataforanalysis.aimX[,"participantday.memegifbug"] == 1,0)
 my_outcome_variable <- "isCompleted_tomorrow"
 
 source("data-analysis-complete-case.R")
@@ -64,7 +67,7 @@ for(i in 1:length(objects.aimX)){
 ```
 
 # Aim 2: Sensitivity Analysis \#2 with Complete Case Data
-In this analysis, we use only those 50 participants unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last study day for all 50 participants.
+In this analysis, we use only those 50 participants unaffected by the bug impacting the delivery of memes, and in addition, we exclude the last two study days for all 50 participants.
 
 ```{r, echo = FALSE, warning = FALSE, results='asis'}
 dataforanalysis.aim2 <- read.csv(file.path(path.dataforanalysis, "dataforanalysis.aim2.csv"), header = TRUE)
@@ -83,3 +86,4 @@ for(i in 1:length(objects.aimX)){
   cat("\n\n")
 }
 ```
+
