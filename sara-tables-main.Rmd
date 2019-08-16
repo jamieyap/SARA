@@ -168,7 +168,6 @@ kable(tab.availability.overall, format = "latex",caption = "Total participant da
   row_spec(2, hline_after = TRUE)
 ```
 
-
 ```{r, echo = FALSE}
 aim1.availability <- SummariseAll(path.aim1.availability, map.long.aim1)
 aim2.availability <- SummariseAll(path.aim2.availability, map.long.aim2)
@@ -235,10 +234,18 @@ tab.miss.overall <- data.frame(aim1 = c(sum(!(is.na(dataforanalysis.aim1$isRando
                                )
 
 tab.miss.overall <- rbind(tab.miss.overall, colSums(tab.miss.overall))
+
+n.aim1 <- length(unique(dataforanalysis.aim1[which((is.na(dataforanalysis.aim1$isRandomized)) & dataforanalysis.aim1$availability==1),"username"]))
+n.aim2 <- length(unique(dataforanalysis.aim2[which((is.na(dataforanalysis.aim2$isRandomized)) & dataforanalysis.aim2$availability==1),"username"]))
+n.aim4 <- length(unique(dataforanalysis.aim4[which((is.na(dataforanalysis.aim4$isRandomized)) & dataforanalysis.aim4$availability==1),"username"]))
+n.miss.overall <- data.frame(aim1 = n.aim1, aim2 = n.aim2, aim4 = n.aim4)
+tab.miss.overall <- rbind(tab.miss.overall, n.miss.overall)
+
 tab.miss.overall <- as.data.frame(tab.miss.overall)
 row.names(tab.miss.overall) <-  c("No. available participant days having an intervention assignment", 
                                   "No. available participant days having missing intervention assignment",
-                                  "Total")
+                                  "Total available participant days",
+                                  "Total participants with any missing intervention assignment on available days")
 
 kable(tab.miss.overall, format = "latex",
       caption = "Total participant days having missing intervention assignment among available participant days",
@@ -248,7 +255,6 @@ kable(tab.miss.overall, format = "latex",
   kable_styling(full_width = FALSE, latex_options = c("HOLD_position")) %>%
   row_spec(2, hline_after = TRUE)
 ```
-
 
 ```{r, echo = FALSE}
 availability.4PM.data <- ReadAll(path.to.files = path.aim1.availability, CleanData = CleanAvailabilityData)
