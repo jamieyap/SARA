@@ -18,6 +18,7 @@ Questions about the material in this repository can be directed at https://githu
 
 File | Description
 ------------ | -------------
+[SARA_documentation.pdf](https://github.com/jamieyap/SARA/blob/master/SARA_documentation.pdf) | Documents data curation
 [display-results.pdf](https://github.com/jamieyap/SARA/blob/master/display-results.pdf) | Displays estimates of marginal and moderated causal effects
 [check-randomization.pdf](https://github.com/jamieyap/SARA/blob/master/check-randomization.pdf) | Describes checks on quality of randomization of the SARA MRT
 [sara-tables-main.pdf](https://github.com/jamieyap/SARA/blob/master/sara-tables-main.pdf) | Displays summary statistics on availability and missing data
