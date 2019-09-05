@@ -1,6 +1,6 @@
 ---
 title: "SARA: Availability and Missing Data Statistics"
-author: "Jamie Yap"
+author: "Jamie Yap, Mashfiqui Rabbi, Meredith Kotov"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 geometry: margin=1in
 output:
@@ -211,7 +211,7 @@ PrintKableTable(output.SummariseAll = aim2.availability,
                 ))
 
 PrintKableTable(output.SummariseAll = aim4.availability,
-                mycaption = "Aim 4: Total participants and days not available for meme/GIF per issue/event within days 3-28",
+                mycaption = "Aim 4: Total participants and days not available for life insights per issue/event within days 3-28",
                 mygenfootnote = paste(aim4.availability.number.days.in.common,
                                       "participant days are impacted by more than one issue/event. Hence,",
                                       sum(as.data.frame(aim4.availability$npersondays)), "-",

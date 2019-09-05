@@ -50,11 +50,7 @@ We conduct exploratory analysis on the moderated effect of offering vs. not offe
 * contact_yes 
 * study_day
 
-and $\beta_1 + \beta_2X + \beta_3X^2$ where moderators $X$ considered were:
-
-* study_day
-
-In both models above, we test the hypothesis $H_0: c\beta = 0$ vs. $H_1: c\beta \neq 0$ where $\beta=(\beta_1, \beta_2)$ or $\beta=(\beta_1, \beta_2, \beta_3)$. We perform a two-sided test and use $\alpha = 0.05$ and the use same set of control covariates in primary analysis:
+In the models above, we test the hypothesis $H_0: c\beta = 0$ vs. $H_1: c\beta \neq 0$ where $\beta=(\beta_1, \beta_2)$. We perform a two-sided test and use $\alpha = 0.05$ and the use same set of control covariates in primary analysis:
 
 * appusage_yes 
 * isCompleted_yesterday_yes

@@ -672,7 +672,7 @@ results.names <- c("complete.case.main.aimX",
                    "complete.case.exploratory.isCompleted_yesterday_yes.aimX",
                    "complete.case.exploratory.female.aimX",
                    "complete.case.exploratory.study_day.aimX",
-                   "complete.case.exploratory.study_day_squared.aimX",
+                   #"complete.case.exploratory.study_day_squared.aimX",
                    "complete.case.exploratory.weekend.aimX",
                    "complete.case.exploratory.all.aimX")
 objects.aimX <- lapply(results.names, function(this.string){
@@ -687,7 +687,7 @@ table.labels <- c("Complete Case Analysis: Main Analysis",
                   "Complete Case Analysis: isCompleted_yesterday_yes=1 vs. isCompleted_yesterday_yes=0",
                   "Complete Case Analysis: female=1 vs. female=0",
                   "Complete Case Analysis: study_day",
-                  "Complete Case Analysis: study_day_squared",
+                  #"Complete Case Analysis: study_day_squared",
                   "Complete Case Analysis: weekend=1 vs. weekend=0",
                   "Complete Case Analysis: Four Moderators in One Model")
 

@@ -674,7 +674,7 @@ results.names <- c("est.mi.main.aimX",
                    "est.mi.exploratory.isCompleted_yesterday_yes.aimX",
                    "est.mi.exploratory.female.aimX",
                    "est.mi.exploratory.study_day.aimX",
-                   "est.mi.exploratory.study_day_squared.aimX",
+                   #"est.mi.exploratory.study_day_squared.aimX",
                    "est.mi.exploratory.weekend.aimX",
                    "est.mi.exploratory.all.aimX")
 objects.aimX <- lapply(results.names, function(this.string){
@@ -689,7 +689,7 @@ table.labels <- c("Analysis with Multiple Imputed Data: Main Analysis",
                   "Analysis with Multiple Imputed Data: isCompleted_yesterday_yes=1 vs. isCompleted_yesterday_yes=0",
                   "Analysis with Multiple Imputed Data: female=1 vs. female=0",
                   "Analysis with Multiple Imputed Data: study_day",
-                  "Analysis with Multiple Imputed Data: study_day_squared",
+                  #"Analysis with Multiple Imputed Data: study_day_squared",
                   "Analysis with Multiple Imputed Data: weekend=1 vs. weekend=0",
                   "Analysis with Multiple Imputed Data: Four Moderators in One Model")
 
