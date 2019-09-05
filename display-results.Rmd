@@ -7,6 +7,7 @@ output:
     fig_caption: yes
     number_sections: yes
 geometry: margin=1in
+urlcolor: magenta
 ---
 
 
@@ -22,6 +23,10 @@ library(knitr)
 library(kableExtra)
 path.dataforanalysis <- Sys.getenv("path.dataforanalysis") 
 ```
+
+\begin{quote}
+This document provides results of analyses of the SARA Micro-Randomized Trial (MRT) data. Other material relevant to curation and analysis of the SARA MRT data are provided at \url{https://github.com/jamieyap/SARA}
+\end{quote}
 
 # Background
 ## Main Analysis

@@ -2,7 +2,8 @@
 title: "SARA: Quality of Randomization"
 author: "Jamie Yap"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-geometry: margin=1in
+geometry: margin=0.80in
+urlcolor: magenta
 output: 
   pdf_document:
     number_sections: TRUE
@@ -109,6 +110,8 @@ This document provides details on quality of randomization of the SARA micro-ran
 **Section 1:** plots of availability over time. \newline
 **Section 2:** plots of covariates across time using available participant days.\newline
 **Section 3:** checks on the quality of randomization and balance in control covariates among available participant days. 
+
+Other material relevant to curation and analysis of the SARA MRT data are provided at \url{https://github.com/jamieyap/SARA}
 
 # Plots of Availability over Time
 

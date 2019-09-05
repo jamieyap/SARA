@@ -3,6 +3,7 @@ title: "SARA: Availability and Missing Data Statistics"
 author: "Jamie Yap, Mashfiqui Rabbi, Meredith Kotov"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 geometry: margin=1in
+urlcolor: magenta
 output:
   pdf_document: 
     fig_caption: yes
@@ -98,12 +99,12 @@ imputed.dataforanalysis.aim2 <- ImputeInterventionAssignment(dataforanalysis.aim
 imputed.dataforanalysis.aim4 <- ImputeInterventionAssignment(dataforanalysis.aim4)
 ```
 
-This document provides summary statistics on availability and missing data from the SARA micro-randomized trial and is divided into three sections. \newline
+This document provides summary statistics on availability and missing data from the SARA Micro-Randomized Trial (MRT) and is divided into three sections. \newline
 **Section 1:** summary statistics on availability for each aim. \newline
 **Section 2:** summary statistics on missing intervention assignment for each aim.\newline
 **Section 3:** summary statistics on control covariates for each aim.
 
-The *csv* files under the column ``File Name'' in the tables below each contain a list of participants and dates that were impacted by various issues/events leading to unavailability or missing intervention assignment. A brief description of these issues/events is given below:
+The *csv* files under the column ``File Name'' in the tables below each contain a list of participants and dates that were impacted by various issues/events leading to unavailability or missing intervention assignment. A brief description of these issues/events is given below.  Other material relevant to curation and analysis of the SARA MRT data are provided at \url{https://github.com/jamieyap/SARA}
 
 
 ```{r, echo = FALSE}
