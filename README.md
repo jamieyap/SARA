@@ -1,4 +1,5 @@
 # Substance Abuse Research Assistant: Curation and Analysis of Micro-Randomized Trial Data
+[![DOI](https://zenodo.org/badge/200732261.svg)](https://zenodo.org/badge/latestdoi/200732261)
 
 ## 0. About Substance Abuse Research Assistant (SARA)
 
