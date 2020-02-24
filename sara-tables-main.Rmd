@@ -1,6 +1,8 @@
 ---
 title: "SARA: Availability and Missing Data Statistics"
-author: "Jamie Yap, Mashfiqui Rabbi, Meredith Kotov"
+author: |
+    | Jamie Yap, Mashfiqui Rabbi, Meredith L. Philyaw-Kotov, 
+    | Maureen A. Walton, Susan A. Murphy, Inbal Nahum-Shani
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 geometry: margin=1in
 urlcolor: magenta

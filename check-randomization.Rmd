@@ -1,6 +1,8 @@
 ---
 title: "SARA: Quality of Randomization"
-author: "Jamie Yap"
+author: |
+    | Jamie Yap, Mashfiqui Rabbi, Meredith L. Philyaw-Kotov, 
+    | Maureen A. Walton, Susan A. Murphy, Inbal Nahum-Shani
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 geometry: margin=0.80in
 urlcolor: magenta

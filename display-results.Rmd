@@ -1,6 +1,8 @@
 ---
 title: 'SARA: Results'
-author: "Jamie Yap"
+author: |
+    | Jamie Yap, Mashfiqui Rabbi, Meredith L. Philyaw-Kotov, 
+    | Maureen A. Walton, Susan A. Murphy, Inbal Nahum-Shani
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
   pdf_document:
